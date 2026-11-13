@@ -1,0 +1,1 @@
+from apps.autotest_my_app.widget.my_app_widget import MyAppWidget

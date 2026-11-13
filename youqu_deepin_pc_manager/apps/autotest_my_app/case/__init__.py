@@ -1,0 +1,1 @@
+from apps.autotest_my_app.case.base_case import BaseCase
