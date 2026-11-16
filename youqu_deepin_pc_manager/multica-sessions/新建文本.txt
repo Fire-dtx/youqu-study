@@ -1,0 +1,1 @@
+压缩包分片 1/6（90MB）。共 6 个分片，下载后合并解压：cat pc_manager_sessions.tar.zst.part.* > pc_manager_sessions.tar.zst && tar --use-compress-program=zstd -xvf pc_manager_sessions.tar.zst

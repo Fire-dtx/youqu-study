@@ -1,0 +1,29 @@
+apps.autotest_my_app.case.1998969_系统环境检测-正常状态.TestMyCase#test_mycase_058    结果：ok
+apps.autotest_my_app.case.1998971_系统环境检测-卸载recovery分区后进行快照检测.TestMyCase#test_mycase_059   结果：实际执行的是“全面检测”，应该执行“系统环境检测”
+apps.autotest_my_app.case.1998973_系统环境检测-SSH密钥权限过大.TestMyCase#test_mycase_016    结果：没有执行“系统环境检测“
+apps.autotest_my_app.case.1998975_更新检测-正常状态.TestMyCase#test_mycase_017           结果：没有执行“更新检测”
+apps.autotest_my_app.case.1998993_V20上全盘默认安装进行检测.TestMyCase#test_mycase_294    结果：ok
+apps.autotest_my_app.case.1998995_V25上进行系统环境检测不存在备份还原分区检测项.TestMyCase#test_mycase_327    结果：ok
+apps.autotest_my_app.case.1998997_V20上非全盘默认安装进行快照检测.TestMyCase#test_mycase_357    结果：有检测动作，但是在全盘安装的机器上运行这个测试用例测试结果不准确。全盘和非全盘的判断可以依据/etc/deepin-installer/deepin-installer.conf中的DI_PARTITION_TYPE：1 （手动安装）、2 （全盘加密安装）、3 （全盘安装保留用户数据，注意: 设置自动安装时不支持上一次是全盘加密或分区加密的场景）、6 （单盘多系统全盘安装）、7 （全盘lvm安装）要模拟非全盘安装场景，
+apps.autotest_my_app.case.1998999_V20上进行系统环境检测存在备份还原分区检测项.TestMyCase#test_mycase_354    结果：ok
+apps.autotest_my_app.case.1999013_SSH秘钥检测通过.TestMyCase#test_mycase_325    结果：ok
+apps.autotest_my_app.case.1999029_时间配置检测正常.TestMyCase#test_mycase_328    结果：没有执行“系统环境检测”
+apps.autotest_my_app.case.1999031_停止时间同步服务后进行时间配置检测.TestMyCase#test_mycase_356    结果：没有执行“系统环境检测”或“全面检测”
+apps.autotest_my_app.case.1999033_禁用服务（开机不自启）后进行时间配置检测.TestMyCase#test_mycase_364    结果：没有执行“系统环境检测”或“全面检测”
+apps.autotest_my_app.case.1999045_网络正常、源正常、存在可升级应用--系统版本检测.TestMyCase#test_mycase_359    结果：没有执行“全面检测“或者“系统环境检测”
+apps.autotest_my_app.case.1999059_关键库检测正常.TestMyCase#test_mycase_284    结果：没有执行“全面检测“或者“系统环境检测”
+apps.autotest_my_app.case.1999063_存在冲突文件-进行更新环境检测：_usr_local_lib_ 和 _usr_lib 或 _usr_lib_均存在同名文件.TestMyCase#test_mycase_314    结果：ok
+apps.autotest_my_app.case.1999071_删除 _usr_local_lib 目录 -进行更新环境检测.TestMyCase#test_mycase_352    结果：执行的是“全面检测”，应该执行“更新环境检测”
+apps.autotest_my_app.case.1999073_V20 - 独立 boot 分区，剩余空间 161MB（>160MB）--boot分区空间检查.TestMyCase#test_mycase_321    结果：执行的是“全面检测”，应该执行“更新环境检测”
+apps.autotest_my_app.case.1999075_V25 - 独立 boot 分区，剩余空间 301MB（>300MB）--boot分区空间检查.TestMyCase#test_mycase_320    结果：应该提示V20上不用执行次用例，请在V25上执行
+apps.autotest_my_app.case.1999087_网络正常，无代理、无防火墙拦截--仓库地址检查.TestMyCase#test_mycase_283    结果：没有执行“更新环境检测”
+apps.autotest_my_app.case.1999089_仓库地址写错（无效地址）--仓库地址检查.TestMyCase#test_mycase_319    结果：用例执行失败，而且没有执行“更新环境检测”
+apps.autotest_my_app.case.1999099_源文件权限正常，不带 i 权限--仓库地址权限检查.TestMyCase#test_mycase_285    结果：没有执行“更新环境检测”
+apps.autotest_my_app.case.1999101_给 sourceslist 添加 i 权限--仓库地址权限检查.TestMyCase#test_mycase_350    结果：没有执行“更新环境检测”
+apps.autotest_my_app.case.1999109_软件包状态检查正常.TestMyCase#test_mycase_286    结果：没有执行“更新环境检测”
+apps.autotest_my_app.case.1999119_检测磁盘的健康状态"良好,警告，损坏，未知".TestMyCase#test_mycase_326    结果：执行的是“全面检测”，应该执行“硬件检测”
+apps.autotest_my_app.case.1999121_cpu温度检测正常.TestMyCase#test_mycase_288    结果：执行的是“全面检测”，应该执行“硬件检测”
+apps.autotest_my_app.case.1999123_sensors 命令不存在（未安装 lm-sensors）.TestMyCase#test_mycase_324    结果：用例执行失败，而且没有执行“硬件检测”
+apps.autotest_my_app.case.1999127_Intel平台的温度项识别--CPU温度检测.TestMyCase#test_mycase_295    结果：执行的是“全面检测”，应该执行“硬件检测”
+apps.autotest_my_app.case.1999129_AMD平台的温度项识别--CPU温度检测.TestMyCase#test_mycase_289    结果：执行的是“全面检测”，应该执行“硬件检测”
+apps.autotest_my_app.case.1999131_内存使用率正常、信息读取正常.TestMyCase#test_mycase_290    结果：没有执行“硬件检测”

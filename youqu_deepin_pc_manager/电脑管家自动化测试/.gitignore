@@ -1,0 +1,9 @@
+# GitHub 单文件硬上限 100 MiB：报告归档改为 zstd 压缩 + 90 MiB 分片入库，
+# 原始大文件与压缩中间件均不入库，还原方法见 归档分片说明.md。
+report.zip
+report.zip.zst
+report_2026_1102.zip.zst
+report_2026_1105.tar
+report_2026_1105.tar.zst
+report_2026_1106.tar
+report_2026_1106.tar.zst
