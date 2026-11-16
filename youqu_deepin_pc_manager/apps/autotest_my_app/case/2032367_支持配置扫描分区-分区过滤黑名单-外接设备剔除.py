@@ -30,6 +30,7 @@ class TestMyCase(BaseCase):
         widget = MyAppWidget(check_start=False)
         widget.kill_pc_manager()
         try:
+            saved_media = widget.isolate_media_mounts()
             real = widget.run_cmd(
                 "readlink -f /sys/block/sdb", timeout=5, out_debug_flag=False
             ).strip()
@@ -89,3 +90,4 @@ class TestMyCase(BaseCase):
                 f"rmdir {EXT_MOUNT} {INT_MOUNT} 2>/dev/null; true",
                 timeout=30,
             )
+            widget.restore_media_mounts(saved_media)

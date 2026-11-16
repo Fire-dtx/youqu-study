@@ -36,6 +36,7 @@ class TestMyCase(BaseCase):
         widget.kill_pc_manager()
         isolated = []
         try:
+            saved_media = widget.isolate_media_mounts()
             widget.sudo_run_cmd(
                 f"umount {MOUNT} 2>/dev/null; rmdir {MOUNT} 2>/dev/null; true",
                 timeout=20,
@@ -183,3 +184,4 @@ class TestMyCase(BaseCase):
                 out_debug_flag=False,
             )
             widget.restore_foreign_dup_files(isolated)
+            widget.restore_media_mounts(saved_media)

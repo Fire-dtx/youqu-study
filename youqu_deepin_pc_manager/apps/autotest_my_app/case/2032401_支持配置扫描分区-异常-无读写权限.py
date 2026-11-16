@@ -26,6 +26,7 @@ class TestMyCase(BaseCase):
         widget = MyAppWidget(check_start=False)
         widget.kill_pc_manager()
         try:
+            saved_media = widget.isolate_media_mounts()
             widget.sudo_run_cmd(
                 f"chmod 755 {A_MOUNT} 2>/dev/null; "
                 f"umount {A_MOUNT} 2>/dev/null; rmdir {A_MOUNT} 2>/dev/null; true",
@@ -91,3 +92,4 @@ class TestMyCase(BaseCase):
                 out_debug_flag=False,
             )
             logger.info(f"[2032401] cleanup_ls_rc={rc}")
+            widget.restore_media_mounts(saved_media)

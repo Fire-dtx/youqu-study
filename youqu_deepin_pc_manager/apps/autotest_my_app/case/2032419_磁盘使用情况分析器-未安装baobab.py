@@ -67,13 +67,23 @@ class TestMyCase(BaseCase):
         1) 单击卡片弹出「工具未安装」确认框, 含取消/立即安装;
         2) 点取消仅关闭弹窗, 不安装 (baobab 仍不存在);
         3) 再次点卡片→立即安装, 断言已发起 pkexec 自动提权;
-        4) 期望弹出鉴权窗口并在输入密码后显示「应用安装中」Loading。
+        4) 断言弹出 polkit 鉴权框(dde-polkit-agent), 然后取消鉴权。
+
+        实现说明(2026-11-16 按实测收敛):
+        - 必须以 start_pc_manager_in_desktop_session() 在桌面 seat 会话内启动
+          应用: 从 ssh 会话直接起的进程没有 polkit 认证代理, pkexec 会退回
+          文本认证并立即失败(产品日志: "Error creating textual authentication
+          agent ... /dev/tty: No such device or address", exit 127);
+        - 「输入密码后显示『应用安装中』Loading 与安装成功」由
+          2032421 test_mycase_259 覆盖; 本用例是"未安装"前提, 这里输入密码
+          完成安装会破坏该前提, 故鉴权框出现即取消, 并断言 baobab 仍未安装。
         """
         widget = MyAppWidget(check_start=False)
         widget.kill_pc_manager()
         try:
             self.assert_false(self._baobab_present(widget))
-            widget.start_pc_manager()
+            # 必须归属桌面 seat 会话, 否则 pkexec 无认证代理(见文档)
+            self.assert_true(widget.start_pc_manager_in_desktop_session())
             self.assert_true(widget.get_pc_manager_process_status())
             widget.click_utility_nav()
             self.assert_true(widget.get_utility_page_showing())
@@ -134,27 +144,15 @@ class TestMyCase(BaseCase):
             self.assert_true("立即安装" in buttons)
             widget._atspi_do_action(buttons["立即安装"])
 
-            install_dialog = None
-            failure_toast = None
-            deadline = 15
-            for _ in range(deadline):
-                sleep(1)
-                nodes = self._tree(widget)
-                for node in nodes:
-                    if node.roleName == "dialog" and node.name == "toolInstall_dialog":
-                        install_dialog = node
-                    if node.roleName == "label" and "工具安装失败" in node.name:
-                        failure_toast = node.name
-                if install_dialog is not None or failure_toast is not None:
-                    break
+            # 提权: 等 polkit 鉴权框(双通道), 出现即取消, 不改"未安装"前提
+            auth_shown = widget.wait_polkit_auth_dialog(timeout=25)
             log_tail = widget.run_cmd(
                 f"grep -a 'baobab' {self.LOG} | tail -5",
                 timeout=10,
                 out_debug_flag=False,
             )
             logger.info(
-                f"[2032419] install_dialog={install_dialog is not None} "
-                f"failure_toast={failure_toast!r} log_tail={log_tail!r}"
+                f"[2032419] polkit_dialog={auth_shown} log_tail={log_tail!r}"
             )
             widget.run_cmd(
                 "export DISPLAY=:0; scrot -o /tmp/2032419_install.png",
@@ -162,8 +160,15 @@ class TestMyCase(BaseCase):
                 out_debug_flag=False,
             )
             self.assert_true("InstallPackage via pkexec apt-get" in log_tail)
-            # 预期: 提权后显示「应用安装中」Loading 对话框
-            self.assert_true(install_dialog is not None)
+            self.assert_true(auth_shown)
+            widget.run_cmd(
+                "export DISPLAY=:0; xdotool key Escape",
+                timeout=5,
+                out_debug_flag=False,
+            )
+            sleep(3)
+            self.assert_false(widget.wait_polkit_auth_dialog(timeout=3))
+            self.assert_false(self._baobab_present(widget))
         finally:
             widget.run_cmd(
                 "export DISPLAY=:0; xdotool key Escape",

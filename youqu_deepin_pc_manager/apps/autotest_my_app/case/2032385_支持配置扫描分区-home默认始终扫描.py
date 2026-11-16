@@ -30,6 +30,7 @@ class TestMyCase(BaseCase):
         widget.kill_pc_manager()
         isolated = []
         try:
+            saved_media = widget.isolate_media_mounts()
             widget.run_cmd(f"rm -f {HOME_FILE}", timeout=5, out_debug_flag=False)
             widget.run_cmd(
                 f"cp -a {CONF} {CONF_BAK} && "
@@ -67,3 +68,4 @@ class TestMyCase(BaseCase):
                 out_debug_flag=False,
             )
             widget.restore_foreign_large_files(isolated)
+            widget.restore_media_mounts(saved_media)

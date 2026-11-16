@@ -23,6 +23,7 @@ class TestMyCase(BaseCase):
         widget = MyAppWidget(check_start=False)
         widget.kill_pc_manager()
         try:
+            saved_media = widget.isolate_media_mounts()
             media_mounts = widget.run_cmd(
                 "findmnt -rn -o TARGET | grep '^/media/' || true",
                 timeout=5,
@@ -89,3 +90,4 @@ class TestMyCase(BaseCase):
             sleep(1)
             widget.kill_pc_manager()
             sleep(2)
+            widget.restore_media_mounts(saved_media)

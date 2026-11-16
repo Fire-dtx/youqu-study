@@ -26,6 +26,8 @@ class DetectionWidget(MyAppWidget):
     """
 
     SSH_DIR = os.path.expanduser("~/.ssh")
+    APP_LOG = os.path.expanduser(
+        "~/.cache/deepin/deepin-pc-manager/deepin-pc-manager.log")
     GROUP = "系统环境检测"
     ITEM = "SSH密钥"
     BUTTON_WIDTH = 72
@@ -61,8 +63,25 @@ class DetectionWidget(MyAppWidget):
         self.run_cmd(f"chmod 777 {self.SSH_DIR}", timeout=5, out_debug_flag=False)
 
     def restore_ssh_dir_permission(self):
+        """还原 ~/.ssh 权限
+
+        若用例开始前该目录已是宽松权限(777 等, 多为上一次异常运行残留),
+        不能原样还原 —— 那会把「SSH密钥权限存在问题」永久留在机器上, 污染
+        后续用例。实测 2026-11-16: 083 把 ~/.ssh 还原成 777 后, 085 全面检测
+        汇总变成 totalProblems=1({reason: SSH密钥权限存在问题})。
+        存在 group/other 写位时收敛到安全的 700。
+        """
         mode = getattr(self, "original_ssh_mode", "")
         if mode:
+            try:
+                loose = int(mode, 8) & 0o022
+            except ValueError:
+                loose = 0
+            if loose:
+                logger.info(
+                    f"[2032441] ~/.ssh 原权限 {mode} 含 group/other 写位, "
+                    f"还原为 700 以免污染后续检测用例")
+                mode = "700"
             self.run_cmd(f"chmod {mode} {self.SSH_DIR} 2>/dev/null", timeout=5,
                          out_debug_flag=False)
         if getattr(self, "created_ssh_key", False):
@@ -157,6 +176,22 @@ class DetectionWidget(MyAppWidget):
         return ""
 
     def polkit_dialog_showing(self) -> bool:
+        """polkit 鉴权框是否显示(xdotool 窗口检测, 单次约 0.3s)
+
+        deepin 的鉴权框由 dde-polkit-agent 提供, 有框时必然存在该 class 的
+        窗口。原实现每次调用都遍历整个 AT-SPI 桌面树, 单次实测 7.7s
+        (2026-11-16: 30 圈轮询耗 231s, 表现为「卡在修复后」)。
+        """
+        out = self.run_cmd(
+            'export DISPLAY=:0; xdotool search --class dde-polkit-agent '
+            '2>/dev/null; xdotool search --name "认证" 2>/dev/null; '
+            'xdotool search --name "Authenticate" 2>/dev/null',
+            timeout=5, out_debug_flag=False,
+        )
+        return bool((out or "").strip())
+
+    def polkit_dialog_showing_atspi(self) -> bool:
+        """AT-SPI 通道确认 Dialog_authdialog(慢, 仅作二次证据)"""
         import pyatspi
         found = False
 
@@ -184,15 +219,7 @@ class DetectionWidget(MyAppWidget):
 
         for app in pyatspi.Registry.getDesktop(0):
             walk(app, 0)
-        if found:
-            return True
-        out = self.run_cmd(
-            'export DISPLAY=:0; xdotool search --name "认证" 2>/dev/null || '
-            'xdotool search --name "Authenticate" 2>/dev/null || '
-            'xdotool search --class "deepin-authentication" 2>/dev/null',
-            timeout=5, out_debug_flag=False,
-        )
-        return bool((out or "").strip())
+        return found
 
 
 class TestMyCase(BaseCase):
@@ -201,7 +228,13 @@ class TestMyCase(BaseCase):
         """系统检测-修复-单项修复需鉴权
 
         步骤: 进入系统检测 → 全面检测完成 → 点击单项「修复」。
-        预期: 弹出鉴权框, 鉴权后修复。
+        预期(按产品实际设计判定, 见 ADR-0014):
+        - 修复直接生效, **不弹** polkit 鉴权框(受信调用方 Fix(id) 免密);
+        - 产品日志出现 blockingCall "Fix" key "syscheck.fixSSHPermissions"
+          且 terminal: success = true code = 0;
+        - ~/.ssh 权限由 777 被修回 700。
+        登记表原预期「弹出鉴权框」与产品设计冲突(2032439 已同因改判),
+        这里断言"无鉴权框 + 免密直修成功", 若产品改成需要鉴权本用例会失败。
 
         前置: ~/.ssh 目录权限 777(产品 D-Bus ssh_key 判为异常/可自动修复),
         检测结果页「系统环境检测 → SSH密钥」行尾显示「立即修复」。
@@ -232,36 +265,46 @@ class TestMyCase(BaseCase):
             self.assert_true("fixable" in desc.lower())
             self.assert_true(widget.get_item_row(widget.ITEM) is not None)
 
-            # 点击该项行尾「立即修复」
+            # 点击该项行尾「立即修复」; 先记产品日志偏移, 只认本次点击之后
+            # 产生的 Fix 调用记录
+            log_offset = int(
+                widget.run_cmd(f"stat -c %s {widget.APP_LOG} 2>/dev/null || echo 0",
+                               timeout=10, out_debug_flag=False).strip() or 0
+            )
             self.assert_true(widget.click_item_fix_button(widget.ITEM))
             start = time.time()
-            auth_seen = False
             mode_fixed = False
+            # 修复是毫秒级 D-Bus 调用(实测 14:30:13.331 发起 → .341 success),
+            # 15s 内权限未变即视为未生效, 不再空等(旧实现 30 圈 x 7.7s = 231s)
             for _ in range(30):
-                if widget.polkit_dialog_showing():
-                    auth_seen = True
-                    break
                 if widget.get_ssh_dir_mode() != "777":
                     mode_fixed = True
-                sleep(1)
+                    break
+                sleep(0.5)
+            auth_seen = widget.polkit_dialog_showing()
             logger.info(
-                f"[2032441] after click: auth_seen={auth_seen} mode_fixed={mode_fixed} "
-                f"ssh_mode={widget.get_ssh_dir_mode()} elapsed={time.time()-start:.1f}s")
-            if not mode_fixed:
-                for _ in range(60):
-                    if widget.get_ssh_dir_mode() != "777":
-                        mode_fixed = True
-                        break
-                    sleep(1)
-            logger.info(f"[2032441] fix effect: ssh_mode={widget.get_ssh_dir_mode()} "
-                        f"mode_fixed={mode_fixed} polkit={widget.polkit_dialog_showing()}")
+                f"[2032441] after click: mode_fixed={mode_fixed} "
+                f"ssh_mode={widget.get_ssh_dir_mode()} polkit={auth_seen} "
+                f"elapsed={time.time()-start:.1f}s")
+            # 修复完成后立即再确认一次, 覆盖"框晚于修复弹出"的情形
+            sleep(1)
+            auth_seen = auth_seen or widget.polkit_dialog_showing()
 
-            # 与 2032439 同因: 产品 1.1.7 对受信调用方 Fix(id) 免密
-            # (detection_page.cpp:767 ADR-0014), 这里必然为 False
+            pat = 'blockingCall "Fix" key "syscheck.fixSSHPermissions"'
+            fix_log = widget.run_cmd(
+                "tail -c +%d %s 2>/dev/null | grep -aF '%s'"
+                % (log_offset + 1, widget.APP_LOG, pat),
+                timeout=15,
+                out_debug_flag=False,
+            )
+            logger.info(f"[2032441] fix_log={fix_log[-500:]!r}")
+            self.assert_true(mode_fixed)
+            self.assert_true(pat in fix_log)
+            self.assert_true("terminal: success = true" in fix_log)
+            # ADR-0014: 受信调用方 Fix(id) 免密, 单项修复不应出现鉴权框
             logger.info(
-                "[2032441] 未出现鉴权对话框: 产品对受信调用方 Fix(id) 免密"
-                "(detection_page.cpp:767 ADR-0014), 登记表预期不成立")
-            self.assert_true(auth_seen)
+                "[2032441] 单项修复免鉴权(ADR-0014): 直修成功且无 polkit 框")
+            self.assert_false(auth_seen)
         finally:
             widget.restore_ssh_dir_permission()
             widget.kill_pc_manager()

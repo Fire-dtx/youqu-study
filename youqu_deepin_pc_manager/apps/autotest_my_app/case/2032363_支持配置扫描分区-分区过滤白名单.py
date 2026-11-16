@@ -27,7 +27,14 @@ class TestMyCase(BaseCase):
 
         构造: /dev/sda6 写入 /etc/fstab 并挂载到 /media/autotest_int;
         /dev/sdb1 直接挂载到 /mnt/test(不写 fstab)。
-        清理: umount 两个挂载点、删除目录、还原 /etc/fstab。
+        清理: umount 两个挂载点、删除目录、还原 /etc/fstab, 并把用例开始前
+        该设备原有的 /media 挂载按原路径挂回。
+
+        注意(产品实现): extended_scan_partition.cpp:377 按"设备"去重——
+        同一设备多处挂载只保留 /proc/mounts 里先出现的那条。测试机上
+        /dev/sda6 已被 udisks 自动挂载到 /media/uostest/<uuid>, 它排在
+        构造的 /media/autotest_int 之前, 列表里只会出现 uuid 那条, 因此
+        前置必须先卸掉该设备已有的 /media 挂载(2026-11-16 失败的根因)。
 
         断言: 内置盘出现在列表; /mnt/test 临时挂载不出现; 列表项均为
         /media 下、removable==0 的固定盘。
@@ -36,6 +43,8 @@ class TestMyCase(BaseCase):
         widget.kill_pc_manager()
         fstab_backup = "/tmp/fstab.autotest.bak"
         ok = False
+        pre_media_mounts = widget.release_device_media_mounts(DEV_OK)
+        logger.info(f"[2032363] 前置: {DEV_OK} 已有 /media 挂载={pre_media_mounts}")
         try:
             # 清理上次异常中断可能残留的挂载点
             widget.sudo_run_cmd(
@@ -43,6 +52,11 @@ class TestMyCase(BaseCase):
                 f"rmdir {MOUNT_OK} {MOUNT_TMP} 2>/dev/null; true",
                 timeout=20,
             )
+            # release_device_media_mounts 已卸掉该设备原有 /media 挂载
+            # (产品按设备去重, 只留 /proc/mounts 里先出现的那条)
+            left = widget.get_device_media_mounts(DEV_OK)
+            logger.info(f"[2032363] 卸载已有挂载后={left}")
+            self.assert_equal([], left)
             out, rc = widget.sudo_run_cmd(
                 f"cp -a /etc/fstab {fstab_backup} && "
                 f"mkdir -p {MOUNT_OK} {MOUNT_TMP} && "
@@ -124,4 +138,10 @@ class TestMyCase(BaseCase):
                 f"rm -f {fstab_backup}; true",
                 timeout=30,
             )
+            restored = widget.restore_device_media_mounts(DEV_OK, pre_media_mounts)
+            logger.info(
+                f"[2032363] 回退后 {DEV_OK} /media 挂载="
+                f"{widget.get_device_media_mounts(DEV_OK)} 恢复一致={restored}"
+            )
+            self.assert_true(restored)
             logger.info(f"[2032363] cleanup done, ok={ok}")

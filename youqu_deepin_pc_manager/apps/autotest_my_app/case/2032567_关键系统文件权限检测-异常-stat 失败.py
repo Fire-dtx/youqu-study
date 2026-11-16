@@ -16,6 +16,32 @@ class TestMyCase(BaseCase):
     TARGET = "/etc/shadow"
     GOOD_MODE = "640"
     GOOD_OWNER = "root:shadow"
+    RESTORE_UNIT = "dpm_shadow_restore"
+
+    def _cancel_restore_timer(self):
+        """取消 --on-active 兜底定时器并清掉 transient 单元
+
+        `systemd-run --on-active=180 --unit=dpm_shadow_restore` 会同时创建
+        `dpm_shadow_restore.timer` 和 `dpm_shadow_restore.service`;
+        `systemctl stop dpm_shadow_restore`(不带后缀) 只作用于 .service,
+        timer 仍 active/waiting, 到点照样 chmod —— 实测 timer 依旧在
+        `systemctl list-timers` 里显示剩余时间。必须显式 stop `<unit>.timer`。
+        单元完全消失是实测结果: stop .timer 后 list-units/list-timers/transient 目录均无残留。
+        """
+        unit = self.RESTORE_UNIT
+        self.widget.sudo_run_cmd(
+            f"systemctl stop {unit}.timer 2>/dev/null; "
+            f"systemctl stop {unit}.service 2>/dev/null; "
+            f"systemctl reset-failed {unit}.timer {unit}.service 2>/dev/null; true",
+            timeout=20, out_debug_flag=False,
+        )
+        return self.widget.run_cmd(
+            f"systemctl list-timers --all --no-pager --no-legend 2>/dev/null "
+            f"| grep -a {unit}; "
+            f"systemctl list-units --all --no-pager --no-legend '{unit}*' 2>/dev/null "
+            f"| grep -a {unit}; true",
+            timeout=15, out_debug_flag=False,
+        ).strip()
 
     def test_mycase_331(self):
         """关键系统文件权限检测-异常：关键系统文件权限被放宽后检测失败
@@ -24,7 +50,9 @@ class TestMyCase(BaseCase):
         2. 执行「系统稳定性」分项检测。
         预期: 检测失败 -- 文件权限检测项检出 /etc/shadow 权限过宽, 结论为失败;
         用例结束前恢复 640 root:shadow 并复检通过。
-        说明: 用例另设置定时兜底(chmod 恢复), 防止中断后 /etc/shadow 长期暴露。
+        说明: 用例另设置定时兜底(systemd-run --on-active=180 chmod 恢复),
+        防止中断后 /etc/shadow 长期暴露; 收尾必须 stop `<unit>.timer`
+        (只 stop 裸单元名不会取消倒计时)并断言无残留单元/定时器。
         """
         widget = MyAppWidget(check_start=False)
         self.widget = widget
@@ -77,14 +105,17 @@ class TestMyCase(BaseCase):
             self.assert_true("failing: 1" in logs)
         finally:
             widget.sudo_run_cmd(
-                f"chmod {self.GOOD_MODE} {self.TARGET}; chown root:shadow {self.TARGET}; "
-                "systemctl stop dpm_shadow_restore 2>/dev/null; "
-                "systemctl reset-failed dpm_shadow_restore 2>/dev/null; true",
+                f"chmod {self.GOOD_MODE} {self.TARGET}; "
+                f"chown {self.GOOD_OWNER} {self.TARGET}; true",
                 timeout=20, out_debug_flag=False,
             )
             restored = _stat()
-            logger.info(f"[2032567] restored={restored}")
-            self.assert_true(restored == f"{self.GOOD_MODE} {self.GOOD_OWNER}")
+            leftovers = self._cancel_restore_timer()
+            logger.info(
+                f"[2032567] restored={restored} timer_leftovers={leftovers!r}")
+            self.assert_true(restored == before)
+            # 兜底定时器必须真的取消, 否则 180s 后还会 chmod 一次, 环境没还原干净
+            self.assert_true(leftovers == "")
             # 恢复后复检: 无残留异常
             if widget.get_pc_manager_process_status():
                 widget.click_detection_nav_by_attr()

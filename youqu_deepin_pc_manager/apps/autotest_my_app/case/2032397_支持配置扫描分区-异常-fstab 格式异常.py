@@ -29,6 +29,7 @@ class TestMyCase(BaseCase):
         widget = MyAppWidget(check_start=False)
         widget.kill_pc_manager()
         try:
+            saved_media = widget.isolate_media_mounts()
             widget.sudo_run_cmd(
                 f"umount {A_MOUNT} 2>/dev/null; rmdir {A_MOUNT} 2>/dev/null; true",
                 timeout=20,
@@ -131,3 +132,4 @@ class TestMyCase(BaseCase):
                 f"umount {A_MOUNT} 2>/dev/null; rmdir {A_MOUNT} 2>/dev/null; true",
                 timeout=30,
             )
+            widget.restore_media_mounts(saved_media)

@@ -16,8 +16,16 @@ class TestMyCase(BaseCase):
 
         步骤与预期:
         1) 搜索「磁盘」: 显示 2 张卡片(磁盘使用情况分析器、磁盘管理器);
-        2) 切到「日志工具」: 显示 1 张卡片(日志收集工具);
-        3) 切回「全部」并清空搜索词: 恢复 4 张卡片。
+        2) 切到「日志工具」, 搜索词保留: 分类与搜索是"与"关系
+           (utility_page.cpp filterTools: categoryMatch && searchMatch),
+           故 0 张卡片 + 空状态可见;
+        3) 仍在「日志工具」下清空搜索词: 显示 1 张卡片(日志收集工具),
+           证明分类过滤生效;
+        4) 切回「全部」: 恢复 4 张卡片。
+
+        注: 登记表原预期 2 为"切到日志工具后显示 1 张", 与本机实现
+        (filterTools 同时按分类与搜索词过滤, 切 Tab 不清空搜索词)不符,
+        2026-11-16 按实现收敛; 产品若改为切 Tab 清空搜索, 需同步改回。
         分类 Tab 使用真实鼠标点击(xdotool); AT-SPI Action/raw click 只改选中态
         不触发 DButtonBox::buttonClicked, 不能用于本用例的联动验证。
         """
@@ -71,25 +79,28 @@ class TestMyCase(BaseCase):
                 timeout=10, out_debug_flag=False,
             )
             self.assert_true(checked == [False, False, False, True])
-            step2_ok = (
-                len(step2) == 1 and step2[0] == "日志收集工具"
-            )
+            # 分类「日志工具」+ 搜索词「磁盘」= 与关系 → 无匹配
+            self.assert_true(len(step2) == 0)
+            self.assert_true(widget.get_utility_empty_state_showing())
 
-            # 3. 切回「全部」并清空搜索词
-            click_tab_real(0)
-            self.assert_true(bool(tabs()[0].checked))
+            # 3. 仍在「日志工具」下清空搜索词 → 只剩该分类的 1 张卡片
             widget.clear_utility_search()
             sleep(2)
             step3 = visible_names()
-            logger.info(f"[2032407] step3 all+cleared cards={step3}")
-            self.assert_true(len(step3) == 4)
-            self.assert_true(set(step3) == {
+            logger.info(f"[2032407] step3 tab=日志工具 cleared cards={step3}")
+            self.assert_true(step3 == ["日志收集工具"])
+
+            # 4. 切回「全部」: 恢复全部 4 张
+            click_tab_real(0)
+            self.assert_true(bool(tabs()[0].checked))
+            sleep(2)
+            step4 = visible_names()
+            logger.info(f"[2032407] step4 all cards={step4}")
+            self.assert_true(len(step4) == 4)
+            self.assert_true(set(step4) == {
                 "本地域名解析工具", "磁盘管理器",
                 "磁盘使用情况分析器", "日志收集工具",
             })
-
-            # 步骤 2 的预期单独断言, 保证步骤 3 的闭环验证先完成
-            self.assert_true(step2_ok)
         finally:
             sleep(1)
             widget.kill_pc_manager()

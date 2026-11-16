@@ -27,6 +27,7 @@ class TestMyCase(BaseCase):
         widget = MyAppWidget(check_start=False)
         widget.kill_pc_manager()
         try:
+            saved_media = widget.isolate_media_mounts()
             # 多块磁盘前置
             disks = widget.run_cmd(
                 "lsblk -dn -o NAME,TYPE | awk '$2==\"disk\"{print $1}'",
@@ -109,3 +110,4 @@ class TestMyCase(BaseCase):
                 f"rmdir {RO_MOUNT} {OTHER_MOUNT} 2>/dev/null; true",
                 timeout=30,
             )
+            widget.restore_media_mounts(saved_media)

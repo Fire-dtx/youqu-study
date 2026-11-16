@@ -6,12 +6,10 @@
 """
 import os
 import re
-import shlex
 
 from apps.autotest_my_app.case import BaseCase
 from apps.autotest_my_app.widget import MyAppWidget
 from src import log
-from setting import conf
 from src import logger
 from src import sleep
 
@@ -234,14 +232,6 @@ class DetectionWidget(MyAppWidget):
             sleep(1)
         return False
 
-    def polkit_agent_running(self) -> bool:
-        """是否有 polkit 鉴权进程(免鉴权的前提下不应出现)"""
-        out = self.run_cmd(
-            "pgrep -f 'dde-polkit-agent' 2>/dev/null | head -1",
-            timeout=5, out_debug_flag=False,
-        )
-        return bool((out or "").strip())
-
     # ------------------------------------------------- 产品日志(修复真实性)
     LOG_PATH = os.path.expanduser(
         "~/.cache/deepin/deepin-pc-manager/deepin-pc-manager.log")
@@ -358,8 +348,9 @@ class TestMyCase(BaseCase):
             # 不弹鉴权框、由 daemon 直接修复成功
             log_offset = widget.get_log_size()
             self.assert_true(widget.click_fix_all())
+            # 免鉴权: 点击后 10s 内不应出现鉴权框(注意 dde-polkit-agent 是
+            # 常驻服务, 进程存在与否无意义, 只能判定有无 Dialog_authdialog)
             self.assert_false(widget.wait_polkit_dialog(timeout=10))
-            self.assert_false(widget.polkit_agent_running())
 
             fix_line = widget.wait_log_match(
                 r'blockingCall "Fix" key "syscheck\.fixSSHPermissions" terminal: '

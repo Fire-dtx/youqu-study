@@ -35,9 +35,18 @@ class TestMyCase(BaseCase):
         进入设置页观察列表。
         断言: 黑名单挂载点(/、/home、/boot、/boot/efi、swap、/sys、/proc、
         /dev 等)均不在列表; 数据盘正常展示(positive control)。
-        清理: umount 并删除挂载点。
+        清理: umount 并删除挂载点, 用例开始前该设备原有的 /media 挂载按
+        原路径挂回。
+
+        注意(产品实现): extended_scan_partition.cpp:377 按设备去重, 同一
+        设备多处挂载只保留 /proc/mounts 里先出现的那条。测试机 /dev/sda6
+        已被 udisks 挂到 /media/uostest/<uuid>, 会顶掉构造的
+        /media/autotest_data, 所以前置必须先卸掉该设备已有的 /media 挂载
+        (2026-11-16 失败的根因)。
         """
         widget = MyAppWidget(check_start=False)
+        pre_media_mounts = widget.release_device_media_mounts(DEVICE)
+        logger.info(f"[2032365] 前置: {DEVICE} 已有 /media 挂载={pre_media_mounts}")
         widget.kill_pc_manager()
         try:
             # 前置事实: fstab/实际挂载包含系统分区与 swap
@@ -54,6 +63,11 @@ class TestMyCase(BaseCase):
                 f"umount {MOUNT_POINT} 2>/dev/null; rmdir {MOUNT_POINT} 2>/dev/null; true",
                 timeout=15,
             )
+            # release_device_media_mounts 已卸掉该设备原有 /media 挂载
+            # (产品按设备去重, 只留 /proc/mounts 里先出现的那条)
+            left = widget.get_device_media_mounts(DEVICE)
+            logger.info(f"[2032365] 卸载已有挂载后={left}")
+            self.assert_equal([], left)
             out, rc = widget.sudo_run_cmd(
                 f"mkdir -p {MOUNT_POINT} && mount {DEVICE} {MOUNT_POINT} && "
                 f"findmnt -n -o SOURCE {MOUNT_POINT}",
@@ -100,3 +114,9 @@ class TestMyCase(BaseCase):
                 f"rmdir {MOUNT_POINT} 2>/dev/null; true",
                 timeout=20,
             )
+            restored = widget.restore_device_media_mounts(DEVICE, pre_media_mounts)
+            logger.info(
+                f"[2032365] 回退后 {DEVICE} /media 挂载="
+                f"{widget.get_device_media_mounts(DEVICE)} 恢复一致={restored}"
+            )
+            self.assert_true(restored)

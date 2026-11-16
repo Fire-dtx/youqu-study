@@ -9,6 +9,9 @@ from apps.autotest_my_app.widget import MyAppWidget
 from src import logger
 from src import sleep
 
+# 注入行的挂载路径前缀(用于把真实内部数据盘行与注入行区分开)
+INJECT_PREFIX = "/media/autotest_"
+
 
 class TestMyCase(BaseCase):
 
@@ -21,12 +24,17 @@ class TestMyCase(BaseCase):
         DPM_FAKE_EXT_PARTITIONS 构造 3 个分区行——该注入项只影响列表显示,
         被复核入口排除, 不会进入扫描或删除流程, 且不落盘、无残留。
 
-        断言: 列表恰好 3 行, 每行是复选框(行格式
+        断言: 注入的 3 行按序出现, 每行是复选框(行格式
         {磁盘名称}({挂载路径} - {容量GB/TB}) 由产品 rowText 生成,
         截图中已人工核对: 数据盘A(/media/autotest_a - 100GB) 等三行),
         行描述(accessibleDescription)依次为三个挂载路径, 无空状态。
+        测试机若有真实内部数据盘自动挂载(/media/<user>/<uuid>), 产品会
+        额外多出一行, 该行只要求是真实挂载点, 不参与行数判定(2026-11-16
+        该机多出 /dev/sda6 的 uuid 挂载, 原 `len(rows)==3` 因此误失败)。
         """
         widget = MyAppWidget(check_start=False)
+        real_before = widget.get_media_mount_points()
+        logger.info(f"[2032359] 用例开始前 /media 挂载={real_before}")
         widget.kill_pc_manager()
         fake = (
             "数据盘A:/media/autotest_a:100;"
@@ -61,7 +69,6 @@ class TestMyCase(BaseCase):
                 if rows:
                     break
             logger.info(f"[2032359] rows={len(rows)}")
-            self.assert_true(len(rows) == 3)
 
             mounts = []
             for row in rows:
@@ -71,9 +78,23 @@ class TestMyCase(BaseCase):
                 logger.info(f"[2032359] row mount={desc!r}")
                 self.assert_true(desc.startswith("/media/"))
                 mounts.append(desc)
-            self.assert_true(
-                mounts == ["/media/autotest_a", "/media/autotest_b", "/media/autotest_c"]
+
+            # 测试机可能已有真实内部数据盘自动挂载(udisks 会在
+            # /media/<user>/<uuid> 挂载), 产品会把它一并列出来, 行数不再是
+            # 固定的 3: 只要求注入的 3 个分区按序出现, 其余行必须是真实挂载点
+            self.assert_true(len(rows) >= 3)
+            injected, real_rows, unexplained = widget.split_partition_rows(
+                mounts, INJECT_PREFIX
             )
+            logger.info(
+                f"[2032359] 注入行={injected} 真实内部盘行={real_rows} "
+                f"无法解释的行={unexplained}"
+            )
+            self.assert_equal(
+                ["/media/autotest_a", "/media/autotest_b", "/media/autotest_c"],
+                injected,
+            )
+            self.assert_equal([], unexplained)
             # 列表有内容时空状态控件应为隐藏(元素存在于树中, 判 showing)
             for expr in (
                 "$//settings_extendedScanPartitionEmptyState",

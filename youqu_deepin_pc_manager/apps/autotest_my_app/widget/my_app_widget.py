@@ -4217,6 +4217,10 @@ class MyAppWidget(BaseWidget):
                         child.showing
                         and child.name
                         and not child.name.startswith("utility_")
+                        # 只认卡片按钮, 且排除 Qt 控件对象名(纯 ASCII 标识符,
+                        # 如搜索框的 DLineEditClearButton): 卡片名是本地化文案
+                        and child.roleName == "push button"
+                        and not child.name.isascii()
                         and child.name not in names
                     ):
                         names.append(child.name)
@@ -10787,6 +10791,143 @@ class MyAppWidget(BaseWidget):
     # 满足"可用空间不足 100MB", 又不会把 tmpfs 塞满导致占用过多内存。
     WECOM_LOW_SPACE_FILL_MB = 30
 
+    def get_media_mounts_by_device(self) -> dict:
+        """当前挂载在 /media 下的分区: {设备: [挂载点, ...]}(按挂载表顺序)
+
+        含义见 get_device_media_mounts(): 产品按设备去重, /media 下先出现的
+        那条会顶掉其它挂载点。测试机常被 udisks 自动挂载到
+        /media/<user>/<uuid>, 用例构造前需要先用 isolate_media_mounts()
+        把这些真实挂载摘掉。
+        """
+        out = self.run_cmd(
+            "awk '$2 ~ /^\\/media\\// {print $1, $2}' /proc/mounts",
+            timeout=5,
+            out_debug_flag=False,
+        )
+        result = {}
+        for line in (out or "").splitlines():
+            parts = line.split()
+            if len(parts) == 2:
+                result.setdefault(parts[0], []).append(parts[1])
+        return result
+
+    def isolate_media_mounts(self) -> dict:
+        """卸载所有挂载在 /media 下的真实分区, 返回现场供回退
+
+        返回 {设备: [挂载点, ...]}, 必须原样传给 restore_media_mounts() 复原。
+        用途: 产品"扩展扫描分区"按设备去重, 测试机 udisks 自动挂载的
+        /media/<user>/<uuid> 会顶掉用例构造的挂载点, 甚至让"空状态"用例
+        多出真实行。
+        """
+        saved = self.get_media_mounts_by_device()
+        if not saved:
+            return {}
+        cmds = []
+        for mount_points in saved.values():
+            for mount_point in mount_points:
+                cmds.append(f"umount {mount_point} 2>/dev/null;")
+                cmds.append(f"umount -l {mount_point} 2>/dev/null;")
+        self.sudo_run_cmd(" ".join(cmds) + " true", timeout=60)
+        left = self.get_media_mounts_by_device()
+        log(f"隔离 /media 真实挂载: 已卸 {saved}, 残留 {left}")
+        return saved
+
+    def restore_media_mounts(self, saved: dict) -> None:
+        """把 isolate_media_mounts() 摘掉的 /media 挂载按原路径挂回"""
+        if not saved:
+            return
+        cmds = []
+        for device, mount_points in saved.items():
+            for mount_point in mount_points:
+                cmds.append(f"mkdir -p {mount_point} && mount {device} {mount_point};")
+        self.sudo_run_cmd(" ".join(cmds) + " true", timeout=60)
+        now = self.get_media_mounts_by_device()
+        log(f"回退 /media 真实挂载: 期望 {saved}, 实际 {now}")
+
+    def get_device_media_mounts(self, device: str) -> list:
+        """列出某块设备当前挂载在 /media 下的挂载点(按 /proc/mounts 顺序)
+
+        产品扩展扫描分区按"设备"去重(extended_scan_partition.cpp:377),
+        同一设备多处挂载只保留挂载表里先出现的那条; 用例若要构造自己的
+        /media 挂载点, 必须先把该设备已有的 /media 挂载卸掉, 否则构造点
+        会被去重丢弃。
+
+        :param device: 设备路径, 如 /dev/sda6
+        :return: 挂载点列表, 如 ['/media/uostest/cb7c...']
+        """
+        out = self.run_cmd(
+            'awk \'$1=="%s" && $2 ~ /^\\/media/ {print $2}\' /proc/mounts'
+            % device,
+            timeout=5,
+            out_debug_flag=False,
+        )
+        return [line.strip() for line in (out or "").splitlines() if line.strip()]
+
+    def release_device_media_mounts(self, device: str) -> list:
+        """卸载 device 在 /media 下的全部挂载, 返回卸载前列表(供回退)
+
+        产品的扩展扫描分区按设备去重(同设备多点只列 /proc/mounts 首条),
+        用例要构造自己的 /media 挂载点前必须先释放已有挂载, 否则构造点
+        会被去重丢弃。调用方应随后断言 get_device_media_mounts() 为空。
+        """
+        before = self.get_device_media_mounts(device)
+        if before:
+            self.sudo_run_cmd(
+                " ".join(f"umount {mp} 2>/dev/null;" for mp in before) + " true",
+                timeout=20,
+            )
+        return before
+
+    def restore_device_media_mounts(self, device: str, mount_points) -> bool:
+        """按原路径 mkdir -p + mount 把 release_device_media_mounts 摘掉的挂载挂回
+
+        :return: True 表示该设备当前 /media 挂载点集合与原集合一致
+        """
+        mount_points = list(mount_points or [])
+        if not mount_points:
+            return True
+        self.sudo_run_cmd(
+            " ".join(f"mkdir -p {mp} && mount {device} {mp};" for mp in mount_points)
+            + " true",
+            timeout=30,
+        )
+        return set(self.get_device_media_mounts(device)) == set(mount_points)
+
+    def split_partition_rows(
+        self, mount_paths, injected_prefix="/media/autotest_"
+    ) -> tuple:
+        """把扫描分区列表行按挂载路径分成 (注入行, 真实盘行, 无法解释的行)
+
+        测试机可能存在 udisks 自动挂载的真实内部数据盘(/media/<user>/<uuid>),
+        产品会把它一并列出, 因此行数不等于构造数量: 注入行按前缀识别,
+        真实盘行必须能对上当前 /media 挂载点, 对不上的行说明产品显示了
+        并不存在的挂载点。
+
+        :return: (injected, real_rows, unexplained_rows)
+        """
+        paths = [p for p in (mount_paths or []) if p]
+        injected = [p for p in paths if p.startswith(injected_prefix)]
+        real_rows = [p for p in paths if not p.startswith(injected_prefix)]
+        mounts = set(self.get_media_mount_points())
+        unexplained = [p for p in real_rows if p not in mounts]
+        return injected, real_rows, unexplained
+
+    def get_media_mount_points(self) -> list:
+        """列出当前挂载在 /media 下的挂载点(真实内部/外接数据盘)
+
+        设置-清理设置-扫描分区列表会列出内部数据盘; 测试机若有真实内部分区
+        被 udisks 自动挂载(/media/<user>/<uuid>), 列表行数就不再等于构造的
+        行数, 用例需要用本方法把真实行与构造行区分开。
+
+        :return: 挂载点列表, 如 ['/media/uostest/cb7c...']
+        """
+        out = self.run_cmd(
+            "awk '{print $2}' /proc/mounts | grep -E '^/media/' || true",
+            timeout=5,
+            out_debug_flag=False,
+        )
+        return [line.strip() for line in (out or "").splitlines() if line.strip()]
+
     def is_mount_present(self, path: str) -> bool:
         """检查指定路径(挂载点)是否仍出现在 /proc/mounts 中
 
@@ -10983,6 +11124,30 @@ class MyAppWidget(BaseWidget):
             self.run_cmd("xdotool key Escape", timeout=2, out_debug_flag=False)
         sleep(0.5)
         self.reconnect_dogtail()
+
+    def wait_polkit_auth_dialog(self, timeout=20) -> bool:
+        """等待 polkit 鉴权框出现(最多 timeout 秒)
+
+        双通道: dde-polkit-agent 的 Dialog_authdialog(AT-SPI) 与 xdotool 窗口名。
+        注意 dde-polkit-agent 守护进程常驻, 只能判弹窗不能判进程。
+        """
+        for _ in range(timeout):
+            if self.get_polkit_auth_dialog_showing():
+                return True
+            try:
+                import pyatspi
+
+                for app in pyatspi.Registry.getDesktop(0):
+                    if app is None or app.name != "dde-polkit-agent":
+                        continue
+                    for dlg in (app.children or []):
+                        if (dlg.name == "Dialog_authdialog"
+                                and dlg.getState().contains(pyatspi.STATE_SHOWING)):
+                            return True
+            except BaseException:
+                pass
+            sleep(1)
+        return False
 
     def get_polkit_auth_dialog_showing(self) -> bool:
         """检查是否存在 polkit 鉴权弹窗(密码输入对话框)

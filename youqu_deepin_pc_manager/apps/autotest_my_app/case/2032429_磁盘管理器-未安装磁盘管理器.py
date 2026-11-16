@@ -498,6 +498,8 @@ class TestMyCase(BaseCase):
             # ===== 等待安装完成(工具安装成功 toast) =====
             success = ""
             failure = ""
+            auth_rounds = 0
+            idle_ok = 0
             for _ in range(240):
                 names = [
                     n for _r, n, _e in self._app_nodes() if n
@@ -508,12 +510,24 @@ class TestMyCase(BaseCase):
                 if any("工具安装失败" in n for n in names):
                     failure = next(n for n in names if "工具安装失败" in n)
                     break
+                # 安装完成后产品会立刻拉起工具(deepin-diskmanager →
+                # authenticateProxy → pkexec), 那是一次**新的** polkit 鉴权。
+                # 这里不处理就会出现「框弹出来没人输密码」, pkexec 挂起,
+                # 安装流程永远走不完(实测 2026-11-16: 卡满 240 圈后被外部超时杀掉)。
+                if self._wait_auth(1) and self._type_auth(widget):
+                    auth_rounds += 1
                 if not self._apt_busy(widget) and self._installed(widget):
-                    sleep(2)
-                    continue
+                    # 装好且 apt 空闲即视为完成; 只多等两圈给 toast 留时间,
+                    # 不能 continue 空转到 240 圈(旧实现的死循环根因)
+                    idle_ok += 1
+                    if idle_ok >= 2:
+                        break
+                else:
+                    idle_ok = 0
                 sleep(1)
             logger.info(
                 f"[2032429] success={success!r} failure={failure!r} "
+                f"auth_rounds={auth_rounds} "
                 f"installed={self._installed(widget)} busy={self._apt_busy(widget)}"
             )
             self.assert_false(bool(failure))

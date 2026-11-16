@@ -42,6 +42,7 @@ class TestMyCase(BaseCase):
             f"数据盘{i}:/media/autotest_fake{i}:10" for i in range(FAKE_COUNT)
         )
         try:
+            saved_media = widget.isolate_media_mounts()
             widget.start_pc_manager()
             self.assert_true(widget.get_pc_manager_process_status())
 
@@ -115,3 +116,4 @@ class TestMyCase(BaseCase):
             sleep(2)
             os.environ.pop(FAKE_ENV, None)
             dogtail_config.actionDelay = old_action_delay
+            widget.restore_media_mounts(saved_media)
