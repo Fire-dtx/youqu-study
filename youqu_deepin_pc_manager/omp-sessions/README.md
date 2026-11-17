@@ -63,7 +63,7 @@
 | 2026-11-05 | `01a1a9a1-e4b4` | youqu_deepin_pc_manager | V25 全量运行并生成报告 | 14 | deepseek-v4.1-flash-1017 |
 | 2026-11-02 | `01a19a4e-ec7a` | youqu_deepin_pc_manager | 梳理用例总数与 P1–P4 优先级 | 5 | deepseek-v4.1-flash-1017 |
 | 2026-10-27 | `01a17c76-913f` | tmp | 测试机部署与用例修复主线（最长会话） | 143 | deepseek-v4.1-flash-1017 / deepseek-flash |
-| 2026-10-26 | `01a177c5-936d` | tmp | 部署到测试环境 10.20.33.103 | 6 | deepseek-v4.1-flash-1017 |
+| 2026-10-26 | `01a177c5-936d` | tmp | 部署到测试环境 | 6 | deepseek-v4.1-flash-1017 |
 | 2026-10-23 | `01a16676-89c6` | test/test1 | Allure 套件列表乱码 | 4 | deepseek-v4.1-flash / deepseek-flash |
 | 2026-10-23 | `01a166bc-6d0a` | youqu_deepin_pc_manager | 提交当前修改 | 1 | deepseek-flash |
 | 2026-10-22 | `01a1614d-803b` | tmp | 排查 manage.py run 失败 | 3 | deepseek-flash / deepseek-v4-flash 等 |
@@ -93,6 +93,6 @@
 
 ## 5. 使用说明
 
-1. 做分享/复盘时先读本文件与 `分享-基于有趣测试框架用AI构建电脑管家自动化测试.md`，再按主题进入具体会话。
+1. 做分享/复盘时先读 `.share/分享-基于有趣测试框架用AI构建电脑管家自动化测试.md`（已脱敏，可对外分享），本目录用于定位原始证据；再按主题进入具体会话。
 2. 会话中的 `recap` 是 omp 在会话空闲时写的摘要，适合快速定位；**结论以原始消息和仓库当前代码为准**，摘要可能滞后。
 3. 会话里出现的测试机地址、账号、密码、Gerrit 凭据仅为历史记录；不要复制到代码、文档模板或公开材料中。

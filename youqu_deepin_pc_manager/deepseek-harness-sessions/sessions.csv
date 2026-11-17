@@ -1,0 +1,213 @@
+﻿开始时间,类型,结果状态,会话ID,用例编号,用例方法,用例标题,结果,轮次,工具错误,摘要文件
+2026-11-10 20:32:53,编排任务,task,session-f751542f-fbc2-4ab1-8e5f-4dfe051d2d3b,2005471,test_mycase_069,系统检测首页--分项检测入口跳转,fail,6,7,digests/2026-11-10/2032_session-f751542f-fbc2-4ab1-8e5f-4dfe051d2d3b.md
+2026-11-10 21:35:00,单条处理-recorded,fail+pass,session-535e6ba0-9781-4051-bd1b-74705d0ddddf,"2005471,2005473,2005475,2005477,2005479",test_mycase_069,系统检测首页--分项检测入口跳转,"pass,pass,pass,pass,fail",1,2,digests/2026-11-10/2135_session-535e6ba0-9781-4051-bd1b-74705d0ddddf.md
+2026-11-10 21:40:00,单条处理-环境阻断,blocked,session-b481aa62-1da0-4eb0-b455-07cd1d13256f,,,,,1,0,digests/2026-11-10/2140_session-b481aa62-1da0-4eb0-b455-07cd1d13256f.md
+2026-11-10 21:40:00,监控恢复-巡检,normal,session-b8fdf87c-c66e-4ba2-93cd-bf209063103d,,,,,1,0,digests/2026-11-10/2140_session-b8fdf87c-c66e-4ba2-93cd-bf209063103d.md
+2026-11-10 21:45:00,单条处理-忙等待,busy,session-99a01373-6291-4a56-bfa2-65ca7a472dff,,,,,1,0,digests/2026-11-10/2145_session-99a01373-6291-4a56-bfa2-65ca7a472dff.md
+2026-11-10 21:50:00,单条处理-环境阻断,blocked,session-373b711b-1848-4bc5-9382-7730ba44e1e5,,,,,1,0,digests/2026-11-10/2150_session-373b711b-1848-4bc5-9382-7730ba44e1e5.md
+2026-11-10 21:55:00,单条处理-忙等待,busy,session-d06351ae-88dd-40e6-b26a-8dd6b407abd2,,,,,1,0,digests/2026-11-10/2155_session-d06351ae-88dd-40e6-b26a-8dd6b407abd2.md
+2026-11-10 22:00:00,单条处理-环境阻断,blocked,session-9beed555-bc56-4a11-bc27-7f7e8a4a341d,,,,,1,0,digests/2026-11-10/2200_session-9beed555-bc56-4a11-bc27-7f7e8a4a341d.md
+2026-11-10 22:00:00,监控恢复-巡检,normal,session-7a5fa8ab-6147-4561-8f0e-1bb26827f789,,,,,1,0,digests/2026-11-10/2200_session-7a5fa8ab-6147-4561-8f0e-1bb26827f789.md
+2026-11-10 22:05:00,单条处理-环境阻断,blocked,session-833d3f66-1fc1-4fe4-8db5-3bf69520c052,,,,,1,0,digests/2026-11-10/2205_session-833d3f66-1fc1-4fe4-8db5-3bf69520c052.md
+2026-11-10 22:10:00,单条处理-recorded,pass,session-375ff49d-d061-46f8-8a30-5b69576811d8,2005481,test_mycase_072,系统检测--检测结果存在可修复问题,pass,1,0,digests/2026-11-10/2210_session-375ff49d-d061-46f8-8a30-5b69576811d8.md
+2026-11-10 22:15:00,单条处理-忙等待,busy,session-37d4de8a-b7dc-4bc8-a62a-29b42b5422b8,,,,,1,0,digests/2026-11-10/2215_session-37d4de8a-b7dc-4bc8-a62a-29b42b5422b8.md
+2026-11-10 22:20:00,单条处理-recorded,pass,session-d51a876f-9d57-4e1d-aefb-47efb3961878,2005483,test_mycase_073,系统检测--检测结果存在不可修复问题,pass,1,0,digests/2026-11-10/2220_session-d51a876f-9d57-4e1d-aefb-47efb3961878.md
+2026-11-10 22:20:00,监控恢复-巡检,normal,session-d02b9c6c-21c2-49db-ad1e-adab4deb7575,,,,,1,0,digests/2026-11-10/2220_session-d02b9c6c-21c2-49db-ad1e-adab4deb7575.md
+2026-11-10 22:25:00,单条处理-环境阻断,blocked,session-627714a5-89b0-469f-8efd-1d5e6aadcde3,,,,,1,0,digests/2026-11-10/2225_session-627714a5-89b0-469f-8efd-1d5e6aadcde3.md
+2026-11-10 22:30:00,单条处理-recorded,pass,session-0b2df943-7279-4158-9e67-9d3d16c0f33a,2005485,test_mycase_074,系统检测--一键修复-全部修复成功,pass,1,0,digests/2026-11-10/2230_session-0b2df943-7279-4158-9e67-9d3d16c0f33a.md
+2026-11-10 22:35:00,单条处理-忙等待,busy,session-c19d19fa-6e88-4be9-ad85-ad0f98918534,,,,,1,0,digests/2026-11-10/2235_session-c19d19fa-6e88-4be9-ad85-ad0f98918534.md
+2026-11-10 22:40:00,单条处理-忙等待,busy,session-335da977-56ec-40dd-90f2-21b663f229c0,,,,,1,0,digests/2026-11-10/2240_session-335da977-56ec-40dd-90f2-21b663f229c0.md
+2026-11-10 22:40:00,监控恢复-巡检,normal,session-5dd9f0fb-954c-4a6c-8294-df2df4edc507,,,,,1,0,digests/2026-11-10/2240_session-5dd9f0fb-954c-4a6c-8294-df2df4edc507.md
+2026-11-10 22:45:00,单条处理-环境阻断,blocked,session-23ea4903-ab74-47dd-97c8-89b47c821f09,,,,,1,0,digests/2026-11-10/2245_session-23ea4903-ab74-47dd-97c8-89b47c821f09.md
+2026-11-10 22:50:00,单条处理-忙等待,busy,session-6262d5db-6a27-4132-a300-6fa9c5170173,,,,,1,0,digests/2026-11-10/2250_session-6262d5db-6a27-4132-a300-6fa9c5170173.md
+2026-11-10 22:55:00,单条处理-环境阻断,blocked,session-38179a04-0c74-43c1-b8a6-a1491b3ce119,,,,,1,0,digests/2026-11-10/2255_session-38179a04-0c74-43c1-b8a6-a1491b3ce119.md
+2026-11-10 23:00:00,单条处理-忙等待,busy,session-925d6576-a25f-40c1-809f-b69c2763597e,,,,,1,0,digests/2026-11-10/2300_session-925d6576-a25f-40c1-809f-b69c2763597e.md
+2026-11-10 23:00:00,监控恢复-巡检,normal,session-be906bbc-1379-4495-81ad-d04ad1e20e8e,,,,,1,0,digests/2026-11-10/2300_session-be906bbc-1379-4495-81ad-d04ad1e20e8e.md
+2026-11-10 23:05:00,单条处理-recorded,pass,session-24df24d1-a42a-4996-a16e-9c885b254123,2005487,test_mycase_075,系统检测-一键修复-部分修复失败,pass,1,1,digests/2026-11-10/2305_session-24df24d1-a42a-4996-a16e-9c885b254123.md
+2026-11-10 23:10:00,单条处理-忙等待,busy,session-6d7acedb-6103-49e9-a22d-648a3632eaf8,,,,,1,0,digests/2026-11-10/2310_session-6d7acedb-6103-49e9-a22d-648a3632eaf8.md
+2026-11-10 23:15:00,单条处理-忙等待,busy,session-f4589e70-96d9-49f5-93f5-ddf80bd6ea42,,,,,1,0,digests/2026-11-10/2315_session-f4589e70-96d9-49f5-93f5-ddf80bd6ea42.md
+2026-11-10 23:20:00,单条处理-环境阻断,blocked,session-d2071811-7884-47ce-b30d-7f3a5136df46,,,,,1,0,digests/2026-11-10/2320_session-d2071811-7884-47ce-b30d-7f3a5136df46.md
+2026-11-10 23:20:00,监控恢复-巡检,normal,session-78462fd5-dbef-46a0-8dea-d2caa81f916c,,,,,1,0,digests/2026-11-10/2320_session-78462fd5-dbef-46a0-8dea-d2caa81f916c.md
+2026-11-10 23:25:00,单条处理-recorded,pass,session-26c35c4e-8373-4dff-a1d9-ba2eb6174579,2005489,test_mycase_076,系统检测-一键修复-修复进度显示,pass,1,0,digests/2026-11-10/2325_session-26c35c4e-8373-4dff-a1d9-ba2eb6174579.md
+2026-11-10 23:30:00,单条处理-忙等待,busy,session-083a7d35-6c10-4694-bb10-3449b3065359,,,,,1,0,digests/2026-11-10/2330_session-083a7d35-6c10-4694-bb10-3449b3065359.md
+2026-11-10 23:35:00,单条处理-忙等待,busy,session-b546c261-ab38-413a-b023-71d3a9d61468,,,,,1,0,digests/2026-11-10/2335_session-b546c261-ab38-413a-b023-71d3a9d61468.md
+2026-11-10 23:40:00,单条处理-recorded,pass,session-21bf74e6-a371-4a1a-99d3-c68a8cae92ca,2005491,test_mycase_077,系统检测-单项修复-修复成功,pass,1,2,digests/2026-11-10/2340_session-21bf74e6-a371-4a1a-99d3-c68a8cae92ca.md
+2026-11-10 23:40:00,监控恢复-巡检,normal,session-6a6ef988-e4db-4394-9cb1-962f55931339,,,,,1,0,digests/2026-11-10/2340_session-6a6ef988-e4db-4394-9cb1-962f55931339.md
+2026-11-10 23:45:00,单条处理-忙等待,busy,session-dc8d4f4b-62bd-4a74-8318-17cfa84d80f1,,,,,1,0,digests/2026-11-10/2345_session-dc8d4f4b-62bd-4a74-8318-17cfa84d80f1.md
+2026-11-10 23:50:00,单条处理-环境阻断,blocked,session-d3e15fc8-4f22-4fad-b523-a6dad033ec38,,,,,1,0,digests/2026-11-10/2350_session-d3e15fc8-4f22-4fad-b523-a6dad033ec38.md
+2026-11-10 23:55:00,单条处理-recorded,pass,session-3bb71d7d-baf6-4dc8-97e1-324b2db1ed35,2005493,test_mycase_078,系统检测-单项修复-修复失败,pass,1,0,digests/2026-11-10/2355_session-3bb71d7d-baf6-4dc8-97e1-324b2db1ed35.md
+2026-11-11 00:00:00,单条处理-环境阻断,blocked,session-7d6baa84-6910-42dd-8af9-80a31ebc8fbb,,,,,1,0,digests/2026-11-11/0000_session-7d6baa84-6910-42dd-8af9-80a31ebc8fbb.md
+2026-11-11 00:00:00,监控恢复-巡检,normal,session-1584d1ee-5da8-44b4-86f2-9eeb2d1a8c1a,,,,,1,0,digests/2026-11-11/0000_session-1584d1ee-5da8-44b4-86f2-9eeb2d1a8c1a.md
+2026-11-11 00:05:00,单条处理-忙等待,busy,session-f558501e-6c0c-4a0c-9135-40ae584f1cbb,,,,,1,0,digests/2026-11-11/0005_session-f558501e-6c0c-4a0c-9135-40ae584f1cbb.md
+2026-11-11 00:10:00,单条处理-recorded,pass,session-9f46ee4a-013c-4f5e-960a-06de74735010,2005495,test_mycase_079,系统检测--空间清理无垃圾,pass,1,0,digests/2026-11-11/0010_session-9f46ee4a-013c-4f5e-960a-06de74735010.md
+2026-11-11 00:15:00,单条处理-recorded,pass,session-117b5c67-4ae5-44ed-8487-5eba9222350c,2005497,test_mycase_080,系统检测--空间清理入口有垃圾,pass,1,0,digests/2026-11-11/0015_session-117b5c67-4ae5-44ed-8487-5eba9222350c.md
+2026-11-11 00:20:00,单条处理-忙等待,busy,session-1614c847-2932-4297-bb11-c1d6ec9b1205,,,,,1,0,digests/2026-11-11/0020_session-1614c847-2932-4297-bb11-c1d6ec9b1205.md
+2026-11-11 00:20:00,监控恢复-巡检,normal,session-e5b5a14f-4792-42b9-bf98-56b4d7a06e71,,,,,1,0,digests/2026-11-11/0020_session-e5b5a14f-4792-42b9-bf98-56b4d7a06e71.md
+2026-11-11 00:25:00,单条处理-recorded,pass,session-e8312f34-df34-455c-bae9-934f7b189435,2005687,test_mycase_130,修复工具--修复工具列表展示,pass,1,0,digests/2026-11-11/0025_session-e8312f34-df34-455c-bae9-934f7b189435.md
+2026-11-11 00:30:00,单条处理-忙等待,busy,session-ef41ba04-b401-4490-8424-06b3781e7c38,,,,,1,0,digests/2026-11-11/0030_session-ef41ba04-b401-4490-8424-06b3781e7c38.md
+2026-11-11 00:35:00,单条处理-recorded,pass,session-4376d40d-c69b-49ed-bc60-c2211a708bd3,2005689,test_mycase_131,修复工具--修复工具模块分类,pass,1,0,digests/2026-11-11/0035_session-4376d40d-c69b-49ed-bc60-c2211a708bd3.md
+2026-11-11 00:40:00,单条处理-recorded,pass,session-9c2e6638-d0cf-4117-8e4f-580fad1e5565,2005691,test_mycase_028,修复工具--分类筛选验证,pass,1,0,digests/2026-11-11/0040_session-9c2e6638-d0cf-4117-8e4f-580fad1e5565.md
+2026-11-11 00:40:00,监控恢复-巡检,normal,session-92120a94-c481-4e22-bb64-c3a2e55d024b,,,,,1,0,digests/2026-11-11/0040_session-92120a94-c481-4e22-bb64-c3a2e55d024b.md
+2026-11-11 00:45:00,单条处理-忙等待,busy,session-6c625c60-95ce-4a8b-9f0b-82a0f4423cb4,,,,,1,0,digests/2026-11-11/0045_session-6c625c60-95ce-4a8b-9f0b-82a0f4423cb4.md
+2026-11-11 00:50:00,单条处理-recorded,pass,session-3a33e991-459c-49d7-9be0-9531c1b58bf3,2005693,test_mycase_029,修复工具--搜索功能,pass,1,0,digests/2026-11-11/0050_session-3a33e991-459c-49d7-9be0-9531c1b58bf3.md
+2026-11-11 00:55:00,单条处理-忙等待,busy,session-38013163-603f-4de6-8376-34cd33929c64,,,,,1,0,digests/2026-11-11/0055_session-38013163-603f-4de6-8376-34cd33929c64.md
+2026-11-11 01:00:00,单条处理-recorded,pass,session-330294c3-7098-4b82-977c-a3ad71f86cc8,2005695,test_mycase_132,修复工具--联网筛选,pass,1,2,digests/2026-11-11/0100_session-330294c3-7098-4b82-977c-a3ad71f86cc8.md
+2026-11-11 01:00:00,监控恢复-巡检,normal,session-274a53d2-ef9b-43c1-821b-df5c94e04c11,,,,,1,0,digests/2026-11-11/0100_session-274a53d2-ef9b-43c1-821b-df5c94e04c11.md
+2026-11-11 01:05:00,单条处理-环境阻断,blocked,session-61654b4e-5555-4fac-90d8-b8ea914beaec,,,,,1,0,digests/2026-11-11/0105_session-61654b4e-5555-4fac-90d8-b8ea914beaec.md
+2026-11-11 01:10:00,单条处理-recorded,fail,session-62ab111c-805b-4e04-a689-2669ff37bc73,2005697,test_mycase_133,修复工具--离线导入,fail,1,0,digests/2026-11-11/0110_session-62ab111c-805b-4e04-a689-2669ff37bc73.md
+2026-11-11 01:15:00,单条处理-忙等待,busy,session-5e80166b-f52d-40af-b2cb-f211c6c44e24,,,,,1,0,digests/2026-11-11/0115_session-5e80166b-f52d-40af-b2cb-f211c6c44e24.md
+2026-11-11 01:20:00,单条处理-忙等待,busy,session-13a54ac0-388b-4d91-a943-5e0f2bf2f8f2,,,,,1,0,digests/2026-11-11/0120_session-13a54ac0-388b-4d91-a943-5e0f2bf2f8f2.md
+2026-11-11 01:20:00,监控恢复-巡检,normal,session-6bbc8bfe-d396-49f2-b429-707bd3a3be94,,,,,1,0,digests/2026-11-11/0120_session-6bbc8bfe-d396-49f2-b429-707bd3a3be94.md
+2026-11-11 01:25:00,单条处理-recorded,fail,session-558fa4bc-9582-4327-ad62-b2f05f3f9b7f,2005699,test_mycase_134,修复工具--离线导入失败验证,fail,1,0,digests/2026-11-11/0125_session-558fa4bc-9582-4327-ad62-b2f05f3f9b7f.md
+2026-11-11 01:30:00,单条处理-环境阻断,blocked,session-d88cbefb-34ec-494f-8b59-8571c312f740,,,,,1,0,digests/2026-11-11/0130_session-d88cbefb-34ec-494f-8b59-8571c312f740.md
+2026-11-11 01:35:00,单条处理-recorded,pass,session-87e005cd-1893-4093-a333-e6aeb28d5c6a,2005701,test_mycase_135,修复工具--工具基础展示验证,pass,1,0,digests/2026-11-11/0135_session-87e005cd-1893-4093-a333-e6aeb28d5c6a.md
+2026-11-11 01:40:00,单条处理-忙等待,busy,session-ffcb815b-f26f-4993-94c3-150869d2cf1b,,,,,1,0,digests/2026-11-11/0140_session-ffcb815b-f26f-4993-94c3-150869d2cf1b.md
+2026-11-11 01:40:00,监控恢复-巡检,normal,session-d72d09e0-d842-4da9-a056-bea137f2553b,,,,,1,0,digests/2026-11-11/0140_session-d72d09e0-d842-4da9-a056-bea137f2553b.md
+2026-11-11 01:45:00,单条处理-recorded,pass,session-4f09ca9f-0c90-4445-b178-d7c172d932c3,2005703,test_mycase_136,修复工具--开始修复（无需提权）,pass,1,0,digests/2026-11-11/0145_session-4f09ca9f-0c90-4445-b178-d7c172d932c3.md
+2026-11-11 01:50:00,单条处理-recorded,fail,session-f0dc3bab-0aff-4930-80ef-260089ccc511,2005705,test_mycase_137,修复工具--开始修复（需要提权）,fail,1,0,digests/2026-11-11/0150_session-f0dc3bab-0aff-4930-80ef-260089ccc511.md
+2026-11-11 01:55:00,单条处理-忙等待,busy,session-93562fc5-4541-4a2f-9c60-043851f711fc,,,,,1,0,digests/2026-11-11/0155_session-93562fc5-4541-4a2f-9c60-043851f711fc.md
+2026-11-11 02:00:00,单条处理-环境阻断,blocked,session-f2871f44-0b12-480d-93ef-533a342b1fb7,,,,,1,0,digests/2026-11-11/0200_session-f2871f44-0b12-480d-93ef-533a342b1fb7.md
+2026-11-11 02:00:00,监控恢复-巡检,normal,session-8d5e84f1-f5fe-4482-acb1-96766f97b9fb,,,,,1,0,digests/2026-11-11/0200_session-8d5e84f1-f5fe-4482-acb1-96766f97b9fb.md
+2026-11-11 02:05:00,单条处理-环境阻断,blocked,session-e550fdf7-c348-43b1-b31c-91a89fc73fc9,,,,,1,0,digests/2026-11-11/0205_session-e550fdf7-c348-43b1-b31c-91a89fc73fc9.md
+2026-11-11 02:10:00,单条处理-recorded,fail,session-92b577c1-8713-4e08-9b42-4d847cb977a4,2005707,test_mycase_138,修复工具--交互验证,fail,1,0,digests/2026-11-11/0210_session-92b577c1-8713-4e08-9b42-4d847cb977a4.md
+2026-11-11 02:15:00,单条处理-环境阻断,blocked,session-4eeb6783-14b0-476e-9ca6-469c43c15d44,,,,,1,0,digests/2026-11-11/0215_session-4eeb6783-14b0-476e-9ca6-469c43c15d44.md
+2026-11-11 02:20:00,单条处理-环境阻断,blocked,session-54e3a18e-9132-446a-b8d4-7a8e312d3f48,,,,,1,0,digests/2026-11-11/0220_session-54e3a18e-9132-446a-b8d4-7a8e312d3f48.md
+2026-11-11 02:20:00,监控恢复-巡检,normal,session-f0b1fa7c-9334-464e-a8a4-6762da2cb8b6,,,,,1,1,digests/2026-11-11/0220_session-f0b1fa7c-9334-464e-a8a4-6762da2cb8b6.md
+2026-11-11 02:25:00,单条处理-忙等待,busy,session-1130bf86-70f6-4974-bb79-7c2fb0f0c220,,,,,1,0,digests/2026-11-11/0225_session-1130bf86-70f6-4974-bb79-7c2fb0f0c220.md
+2026-11-11 02:30:00,单条处理-忙等待,busy,session-cec2161e-afb9-46be-bfc3-dede539fd659,,,,,1,0,digests/2026-11-11/0230_session-cec2161e-afb9-46be-bfc3-dede539fd659.md
+2026-11-11 02:35:00,单条处理-recorded,pass,session-580aa769-deb9-4e3e-8372-bb0f3f24ae5d,2005709,test_mycase_139,修复工具-交互弹窗 (确认框)验证,pass,1,3,digests/2026-11-11/0235_session-580aa769-deb9-4e3e-8372-bb0f3f24ae5d.md
+2026-11-11 02:40:00,单条处理-忙等待,busy,session-acbde8a0-2a2e-4eff-ae8e-4b0af22810d7,,,,,1,0,digests/2026-11-11/0240_session-acbde8a0-2a2e-4eff-ae8e-4b0af22810d7.md
+2026-11-11 02:40:00,监控恢复-巡检,normal,session-e11c629a-d8f8-4861-879a-74d151454839,,,,,1,0,digests/2026-11-11/0240_session-e11c629a-d8f8-4861-879a-74d151454839.md
+2026-11-11 02:45:00,单条处理-环境阻断,blocked,session-1dcc82ce-6078-4983-8bff-706e9529ce82,,,,,1,0,digests/2026-11-11/0245_session-1dcc82ce-6078-4983-8bff-706e9529ce82.md
+2026-11-11 02:50:00,单条处理-recorded,pass,session-d7859170-ddee-456b-a32d-d506d2af922c,2005711,test_mycase_140,修复工具--交互弹窗 (提示框),pass,1,0,digests/2026-11-11/0250_session-d7859170-ddee-456b-a32d-d506d2af922c.md
+2026-11-11 02:55:00,单条处理-recorded,pass,session-d51da7d2-ebf4-49f5-b6ac-bbcab206553b,2005713,test_mycase_141,修复工具--交互弹窗 (输入框)验证,pass,1,3,digests/2026-11-11/0255_session-d51da7d2-ebf4-49f5-b6ac-bbcab206553b.md
+2026-11-11 03:00:00,单条处理-忙等待,busy,session-9976c1cd-aa1d-4809-a0aa-d246cfa83114,,,,,1,0,digests/2026-11-11/0300_session-9976c1cd-aa1d-4809-a0aa-d246cfa83114.md
+2026-11-11 03:00:00,监控恢复-巡检,normal,session-e62351e0-5222-425f-8d32-12a497c09127,,,,,1,0,digests/2026-11-11/0300_session-e62351e0-5222-425f-8d32-12a497c09127.md
+2026-11-11 03:05:00,单条处理-忙等待,busy,session-3a657d3c-1ae6-4a29-a247-fe6e93819f8c,,,,,1,0,digests/2026-11-11/0305_session-3a657d3c-1ae6-4a29-a247-fe6e93819f8c.md
+2026-11-11 03:10:00,单条处理-recorded,pass,session-1df8a6a4-9ab8-482c-88c4-39169eebb205,2005715,test_mycase_030,修复工具--交互弹窗 (U盘选择框)验证,pass,1,5,digests/2026-11-11/0310_session-1df8a6a4-9ab8-482c-88c4-39169eebb205.md
+2026-11-11 03:15:00,单条处理-忙等待,busy,session-4b4efcc5-493c-4f2c-a2be-21d043639c9f,,,,,1,0,digests/2026-11-11/0315_session-4b4efcc5-493c-4f2c-a2be-21d043639c9f.md
+2026-11-11 03:20:00,单条处理-忙等待,busy,session-1d1cf607-4cf2-4239-bc14-8effec12424c,,,,,1,0,digests/2026-11-11/0320_session-1d1cf607-4cf2-4239-bc14-8effec12424c.md
+2026-11-11 03:20:00,监控恢复-巡检,normal,session-adbd794a-ebd9-4b4e-8e0b-e1a6b0886220,,,,,1,0,digests/2026-11-11/0320_session-adbd794a-ebd9-4b4e-8e0b-e1a6b0886220.md
+2026-11-11 03:25:00,单条处理-忙等待,busy,session-e0e16a86-400d-473a-a657-81e235d2f739,,,,,1,0,digests/2026-11-11/0325_session-e0e16a86-400d-473a-a657-81e235d2f739.md
+2026-11-11 03:30:00,单条处理-忙等待,busy,session-a270e4ed-0ff0-460b-b81e-d83591627900,,,,,1,0,digests/2026-11-11/0330_session-a270e4ed-0ff0-460b-b81e-d83591627900.md
+2026-11-11 03:35:00,单条处理-recorded,pass,session-65c2e988-8cb6-4803-9703-9c4ccf115bb8,2005717,test_mycase_142,系统修复-网络服务重启-正常授权下 NetworkManager 重启成功,pass,1,2,digests/2026-11-11/0335_session-65c2e988-8cb6-4803-9703-9c4ccf115bb8.md
+2026-11-11 03:40:00,单条处理-忙等待,busy,session-432d0b46-ab46-4f15-99e2-df59551ec113,,,,,1,0,digests/2026-11-11/0340_session-432d0b46-ab46-4f15-99e2-df59551ec113.md
+2026-11-11 03:40:00,监控恢复-巡检,normal,session-79b1df0c-f9b1-48b1-a1d4-b34cf7a44037,,,,,1,0,digests/2026-11-11/0340_session-79b1df0c-f9b1-48b1-a1d4-b34cf7a44037.md
+2026-11-11 03:45:00,单条处理-忙等待,busy,session-c33a86bf-7119-41fa-b1b0-e274fb596ecc,,,,,1,0,digests/2026-11-11/0345_session-c33a86bf-7119-41fa-b1b0-e274fb596ecc.md
+2026-11-11 03:50:00,单条处理-忙等待,busy,session-5a6da209-3f82-406f-b6fc-67496f6ed9d3,,,,,1,0,digests/2026-11-11/0350_session-5a6da209-3f82-406f-b6fc-67496f6ed9d3.md
+2026-11-11 03:55:00,单条处理-recorded,pass,session-f8ad68dc-95e9-4ee6-928d-9cbc20a57d04,2005719,test_mycase_143,系统修复-网络服务重启-NetworkManager 服务本身异常,pass,1,4,digests/2026-11-11/0355_session-f8ad68dc-95e9-4ee6-928d-9cbc20a57d04.md
+2026-11-11 04:00:00,单条处理-忙等待,busy,session-f44a74b8-3b7c-4a87-bba3-9cc44ee6b5df,,,,,1,0,digests/2026-11-11/0400_session-f44a74b8-3b7c-4a87-bba3-9cc44ee6b5df.md
+2026-11-11 04:00:00,监控恢复-巡检,normal,session-cb844b06-f334-4f79-aa4f-ef31be2502e7,,,,,1,0,digests/2026-11-11/0400_session-cb844b06-f334-4f79-aa4f-ef31be2502e7.md
+2026-11-11 04:05:00,单条处理-忙等待,busy,session-2f14364a-1449-4029-98b6-ab763263d002,,,,,1,0,digests/2026-11-11/0405_session-2f14364a-1449-4029-98b6-ab763263d002.md
+2026-11-11 04:10:00,单条处理-环境阻断,blocked,session-989b7730-a6ef-406a-98ad-e967f0ab6914,,,,,1,0,digests/2026-11-11/0410_session-989b7730-a6ef-406a-98ad-e967f0ab6914.md
+2026-11-11 04:15:00,单条处理-recorded,fail,session-96331a11-b3b7-4881-9d2a-78da3edc7e5c,2005723,test_mycase_267,系统修复-修复依赖关系不满足-仓库更新成功依赖修复成功,fail,1,2,digests/2026-11-11/0415_session-96331a11-b3b7-4881-9d2a-78da3edc7e5c.md
+2026-11-11 04:20:00,单条处理-环境阻断,blocked,session-c9bf795f-18cd-4909-b85e-5eb2e8f339d0,,,,,1,0,digests/2026-11-11/0420_session-c9bf795f-18cd-4909-b85e-5eb2e8f339d0.md
+2026-11-11 04:20:00,监控恢复-巡检,normal,session-be7b5588-9b19-4274-9643-8e234500bd35,,,,,1,0,digests/2026-11-11/0420_session-be7b5588-9b19-4274-9643-8e234500bd35.md
+2026-11-11 04:25:00,单条处理-recorded,fail,session-88d514f0-d0b4-4650-a53b-3b4998a192a8,2005723,test_mycase_267,系统修复-修复依赖关系不满足-仓库更新成功依赖修复成功,fail,1,1,digests/2026-11-11/0425_session-88d514f0-d0b4-4650-a53b-3b4998a192a8.md
+2026-11-11 04:30:00,单条处理-环境阻断,blocked,session-3acde286-6e45-48c2-b349-a73ffecf94ec,,,,,1,0,digests/2026-11-11/0430_session-3acde286-6e45-48c2-b349-a73ffecf94ec.md
+2026-11-11 04:35:00,单条处理-recorded,fail,session-daef66ae-d382-40c4-9021-6cada2622032,2005723,test_mycase_267,系统修复-修复依赖关系不满足-仓库更新成功依赖修复成功,fail,1,0,digests/2026-11-11/0435_session-daef66ae-d382-40c4-9021-6cada2622032.md
+2026-11-11 04:40:00,单条处理-recorded,fail,session-2cbc7bff-e31f-4444-9941-e2a5c2989eff,2005723,test_mycase_267,系统修复-修复依赖关系不满足-仓库更新成功依赖修复成功,fail,1,1,digests/2026-11-11/0440_session-2cbc7bff-e31f-4444-9941-e2a5c2989eff.md
+2026-11-11 04:40:00,监控恢复-巡检,normal,session-733ee929-33ea-4c83-ad6d-18698d9507ab,,,,,1,0,digests/2026-11-11/0440_session-733ee929-33ea-4c83-ad6d-18698d9507ab.md
+2026-11-11 04:45:00,单条处理-recorded,fail,session-a5d8e9ab-7660-4c63-aaef-3151b1ec6319,2005723,test_mycase_267,系统修复-修复依赖关系不满足-仓库更新成功依赖修复成功,fail,1,0,digests/2026-11-11/0445_session-a5d8e9ab-7660-4c63-aaef-3151b1ec6319.md
+2026-11-11 04:50:00,单条处理-recorded,fail,session-6063bb4f-6353-46ed-80e2-9cbd5855d3c4,2005723,test_mycase_267,系统修复-修复依赖关系不满足-仓库更新成功依赖修复成功,fail,1,0,digests/2026-11-11/0450_session-6063bb4f-6353-46ed-80e2-9cbd5855d3c4.md
+2026-11-11 04:55:00,单条处理-recorded,fail,session-acaaa3e7-c4fb-46da-9fc6-e93cff1e9b92,2005723,test_mycase_267,系统修复-修复依赖关系不满足-仓库更新成功依赖修复成功,fail,1,2,digests/2026-11-11/0455_session-acaaa3e7-c4fb-46da-9fc6-e93cff1e9b92.md
+2026-11-11 05:00:00,单条处理-recorded,fail,session-7ef7fa40-f8fa-45cf-b153-d4997c3e4ba5,2005725,test_mycase_144,系统修复-修复依赖关系不满足-apt update 失败（仓库不可达）,fail,1,1,digests/2026-11-11/0500_session-7ef7fa40-f8fa-45cf-b153-d4997c3e4ba5.md
+2026-11-11 05:00:00,监控恢复-巡检,normal,session-67f0f712-6f3c-4385-85b3-b56ff11ce133,,,,,1,0,digests/2026-11-11/0500_session-67f0f712-6f3c-4385-85b3-b56ff11ce133.md
+2026-11-11 05:05:00,单条处理-recorded,fail,session-04687cfb-af22-4c78-ae3d-a4dbc2b161f3,2005725,test_mycase_144,系统修复-修复依赖关系不满足-apt update 失败（仓库不可达）,fail,1,0,digests/2026-11-11/0505_session-04687cfb-af22-4c78-ae3d-a4dbc2b161f3.md
+2026-11-11 05:10:00,单条处理-recorded,fail,session-7de9b1c5-440b-4996-96c1-f3ecd81da011,2005727,test_mycase_145,系统修复-修复依赖关系不满足-apt install -fy 失败（依赖无法解决）,fail,1,0,digests/2026-11-11/0510_session-7de9b1c5-440b-4996-96c1-f3ecd81da011.md
+2026-11-11 05:15:00,单条处理-环境阻断,blocked,session-6b8e1dbb-28aa-4e2d-9b07-b74e8d606167,,,,,1,0,digests/2026-11-11/0515_session-6b8e1dbb-28aa-4e2d-9b07-b74e8d606167.md
+2026-11-11 05:20:00,单条处理-recorded,fail,session-818df7be-e914-4516-a77b-49c94dae3295,2005729,test_mycase_146,系统修复-修复依赖关系不满足-apt install -fy 部分修复成功,fail,1,3,digests/2026-11-11/0520_session-818df7be-e914-4516-a77b-49c94dae3295.md
+2026-11-11 05:20:00,监控恢复-巡检,normal,session-b4c33532-bc0e-47d9-a913-4dd8cdd7472c,,,,,1,0,digests/2026-11-11/0520_session-b4c33532-bc0e-47d9-a913-4dd8cdd7472c.md
+2026-11-11 05:25:00,单条处理-环境阻断,blocked,session-2df27195-f42a-4061-828c-d2aded541267,,,,,1,0,digests/2026-11-11/0525_session-2df27195-f42a-4061-828c-d2aded541267.md
+2026-11-11 05:30:00,单条处理-recorded,fail,session-05515307-88bd-4dbf-abb1-9b9f515f0762,2005731,test_mycase_147,系统修复-修复依赖关系不满足-dpkg --configure -a 执行失败,fail,1,0,digests/2026-11-11/0530_session-05515307-88bd-4dbf-abb1-9b9f515f0762.md
+2026-11-11 05:35:00,单条处理-recorded,fail,session-9aacfcb8-3bcc-4b98-a44b-ac61f6972c46,2005733,test_mycase_148,系统修复-修复依赖关系不满足-修复成功,fail,1,0,digests/2026-11-11/0535_session-9aacfcb8-3bcc-4b98-a44b-ac61f6972c46.md
+2026-11-11 05:40:00,单条处理-recorded,fail,session-a5bc7e4e-95b7-459a-a9ac-148abf1474ae,2005735,test_mycase_149,系统修复-修复依赖关系不满足-apt-dpkg 命令不存在（待确认？？）,fail,1,1,digests/2026-11-11/0540_session-a5bc7e4e-95b7-459a-a9ac-148abf1474ae.md
+2026-11-11 05:40:00,监控恢复-巡检,normal,session-cf8a46af-ac46-4f89-b7d9-f320892259c4,,,,,1,0,digests/2026-11-11/0540_session-cf8a46af-ac46-4f89-b7d9-f320892259c4.md
+2026-11-11 05:45:00,单条处理-环境阻断,blocked,session-d2213b19-59b5-45ae-a664-2900768c0aed,,,,,1,0,digests/2026-11-11/0545_session-d2213b19-59b5-45ae-a664-2900768c0aed.md
+2026-11-11 05:50:00,单条处理-recorded,fail,session-8a15904b-8dc6-406d-afd6-94b5dee65197,2005737,test_mycase_150,系统修复-不支持长文件名-修复成功,fail,1,0,digests/2026-11-11/0550_session-8a15904b-8dc6-406d-afd6-94b5dee65197.md
+2026-11-11 05:55:00,单条处理-忙等待,busy,session-e8a1eb33-54cb-4b10-bd4e-fd31c90091e7,,,,,1,0,digests/2026-11-11/0555_session-e8a1eb33-54cb-4b10-bd4e-fd31c90091e7.md
+2026-11-11 06:00:00,单条处理-环境阻断,blocked,session-9c52c9c3-a08d-4101-acff-835e76e0142e,,,,,1,0,digests/2026-11-11/0600_session-9c52c9c3-a08d-4101-acff-835e76e0142e.md
+2026-11-11 06:00:00,监控恢复-巡检,normal,session-c192bfb3-d388-4b3b-85a0-d7157b7f0c73,,,,,1,0,digests/2026-11-11/0600_session-c192bfb3-d388-4b3b-85a0-d7157b7f0c73.md
+2026-11-11 06:05:00,单条处理-忙等待,busy,session-fcdb441c-9560-4137-aef0-6463130492a6,,,,,1,0,digests/2026-11-11/0605_session-fcdb441c-9560-4137-aef0-6463130492a6.md
+2026-11-11 06:10:00,单条处理-recorded,fail,session-b29f152f-9132-4b37-a81d-15865c81d926,2005739,test_mycase_151,桌面修复--密钥环频繁弹出--修复成功,fail,1,1,digests/2026-11-11/0610_session-b29f152f-9132-4b37-a81d-15865c81d926.md
+2026-11-11 06:15:00,单条处理-环境阻断,blocked,session-60348ff1-a9c2-46d1-8b93-4471a23d1159,,,,,1,0,digests/2026-11-11/0615_session-60348ff1-a9c2-46d1-8b93-4471a23d1159.md
+2026-11-11 06:20:00,单条处理-recorded,fail,session-91567a28-53f9-4e8d-b055-b2822d9c0272,2005741,test_mycase_152,桌面修复--密钥环频繁弹出--修复后密钥环弹窗问题验证,fail,1,0,digests/2026-11-11/0620_session-91567a28-53f9-4e8d-b055-b2822d9c0272.md
+2026-11-11 06:20:00,监控恢复-巡检,normal,session-5f90f1c4-91a6-4992-8c2c-7815d3a454f7,,,,,1,0,digests/2026-11-11/0620_session-5f90f1c4-91a6-4992-8c2c-7815d3a454f7.md
+2026-11-11 06:25:00,单条处理-忙等待,busy,session-484f1cc2-f4b3-4468-af24-6e6f054cb866,,,,,1,0,digests/2026-11-11/0625_session-484f1cc2-f4b3-4468-af24-6e6f054cb866.md
+2026-11-11 06:30:00,单条处理-recorded,fail,session-4472e476-1110-425c-b507-b71b3ccdb98b,2005745,test_mycase_244,外设修复-U盘修复--FAT32 U 盘存在可自动修复的错误,fail,1,0,digests/2026-11-11/0630_session-4472e476-1110-425c-b507-b71b3ccdb98b.md
+2026-11-11 06:35:00,单条处理-忙等待,busy,session-eb73bbaa-6033-4eef-8e2f-75de35542798,,,,,1,0,digests/2026-11-11/0635_session-eb73bbaa-6033-4eef-8e2f-75de35542798.md
+2026-11-11 06:40:00,单条处理-忙等待,busy,session-d32ec380-5312-4af6-bd4f-570176756e43,,,,,1,0,digests/2026-11-11/0640_session-d32ec380-5312-4af6-bd4f-570176756e43.md
+2026-11-11 06:40:00,监控恢复-巡检,normal,session-5cb33f58-6cc1-4eb1-a609-177644b0a722,,,,,1,0,digests/2026-11-11/0640_session-5cb33f58-6cc1-4eb1-a609-177644b0a722.md
+2026-11-11 06:45:00,单条处理-recorded,fail,session-1d6e39c8-2cbc-4117-bcae-cfb8b0287fe1,2005747,test_mycase_245,外设修复-U盘修复-- FAT32 U 盘损坏严重,fail,1,1,digests/2026-11-11/0645_session-1d6e39c8-2cbc-4117-bcae-cfb8b0287fe1.md
+2026-11-11 06:50:00,单条处理-环境阻断,blocked,session-53d671d0-0f9b-40b6-88c6-302059bf2421,,,,,1,0,digests/2026-11-11/0650_session-53d671d0-0f9b-40b6-88c6-302059bf2421.md
+2026-11-11 06:55:00,单条处理-忙等待,busy,session-2de93f5f-679a-4930-b810-ee7e9b8f9e49,,,,,1,0,digests/2026-11-11/0655_session-2de93f5f-679a-4930-b810-ee7e9b8f9e49.md
+2026-11-11 07:00:00,单条处理-环境阻断,blocked,session-c2d68e90-aed6-428d-8daf-f50b46fd56d7,,,,,1,0,digests/2026-11-11/0700_session-c2d68e90-aed6-428d-8daf-f50b46fd56d7.md
+2026-11-11 07:00:00,监控恢复-巡检,normal,session-a0670ddf-bbca-4382-bde1-4300df5b4f86,,,,,1,0,digests/2026-11-11/0700_session-a0670ddf-bbca-4382-bde1-4300df5b4f86.md
+2026-11-11 07:05:00,单条处理-忙等待,busy,session-9c6537ab-a6c0-43f4-b9e9-f1085cb09c29,,,,,1,0,digests/2026-11-11/0705_session-9c6537ab-a6c0-43f4-b9e9-f1085cb09c29.md
+2026-11-11 07:10:00,单条处理-忙等待,busy,session-46164c21-f2c5-43e3-8b5c-ce532e3f01ef,,,,,1,0,digests/2026-11-11/0710_session-46164c21-f2c5-43e3-8b5c-ce532e3f01ef.md
+2026-11-11 07:15:00,单条处理-环境阻断,blocked,session-625610a4-a426-414a-a9a2-b152b7db2b89,,,,,1,0,digests/2026-11-11/0715_session-625610a4-a426-414a-a9a2-b152b7db2b89.md
+2026-11-11 07:20:00,单条处理-忙等待,busy,session-3eebd346-d010-4b4a-90be-9743ba6e2aa4,,,,,1,0,digests/2026-11-11/0720_session-3eebd346-d010-4b4a-90be-9743ba6e2aa4.md
+2026-11-11 07:20:00,监控恢复-巡检,normal,session-0c4e5c08-1ec9-43c2-81ec-2fdf936e9263,,,,,1,0,digests/2026-11-11/0720_session-0c4e5c08-1ec9-43c2-81ec-2fdf936e9263.md
+2026-11-11 07:25:00,单条处理-忙等待,busy,session-f231c3e2-300c-462e-b92c-e30a7ed40f26,,,,,1,0,digests/2026-11-11/0725_session-f231c3e2-300c-462e-b92c-e30a7ed40f26.md
+2026-11-11 07:30:00,单条处理-忙等待,busy,session-6b7acd26-f294-4fd6-a1ef-183de2a19476,,,,,1,0,digests/2026-11-11/0730_session-6b7acd26-f294-4fd6-a1ef-183de2a19476.md
+2026-11-11 07:35:00,单条处理-环境阻断,blocked,session-78289337-faed-450a-b08c-e037f4ed77d3,,,,,1,0,digests/2026-11-11/0735_session-78289337-faed-450a-b08c-e037f4ed77d3.md
+2026-11-11 07:40:00,单条处理-环境阻断,blocked,session-5171b862-ce80-43ca-8278-7c1c41bb75e9,,,,,1,0,digests/2026-11-11/0740_session-5171b862-ce80-43ca-8278-7c1c41bb75e9.md
+2026-11-11 07:40:00,监控恢复-巡检,normal,session-b23bf91c-a368-457f-ba64-5aa2bcc358a6,,,,,1,0,digests/2026-11-11/0740_session-b23bf91c-a368-457f-ba64-5aa2bcc358a6.md
+2026-11-11 07:45:00,单条处理-忙等待,busy,session-e7033e83-56bd-4ac1-990d-0bd2a75e62b7,,,,,1,0,digests/2026-11-11/0745_session-e7033e83-56bd-4ac1-990d-0bd2a75e62b7.md
+2026-11-11 07:50:00,单条处理-忙等待,busy,session-785d7f43-a806-480c-a6f3-20aa9c35a97b,,,,,1,0,digests/2026-11-11/0750_session-785d7f43-a806-480c-a6f3-20aa9c35a97b.md
+2026-11-11 07:55:00,单条处理-忙等待,busy,session-4c3506d1-3523-4a23-9a65-b8e75ca968bf,,,,,1,0,digests/2026-11-11/0755_session-4c3506d1-3523-4a23-9a65-b8e75ca968bf.md
+2026-11-11 08:00:00,单条处理-recorded,fail,session-85fd2306-8413-47ce-9fa7-370b8752bf0c,2005749,test_mycase_246,外设修复-修复U盘无法识别--无错误的 exFAT U 盘,fail,1,1,digests/2026-11-11/0800_session-85fd2306-8413-47ce-9fa7-370b8752bf0c.md
+2026-11-11 08:00:00,监控恢复-介入,recover,session-93a753fd-5236-43f7-9ea3-51d513c8c408,2005749,,,fail,1,2,digests/2026-11-11/0800_session-93a753fd-5236-43f7-9ea3-51d513c8c408.md
+2026-11-11 08:05:00,单条处理-忙等待,busy,session-dcd56d5f-892f-4913-9522-1a8bd9b047be,,,,,1,0,digests/2026-11-11/0805_session-dcd56d5f-892f-4913-9522-1a8bd9b047be.md
+2026-11-11 08:10:00,单条处理-recorded,fail,session-ab4625c9-353c-4f93-9890-514ed14a9b23,2005751,test_mycase_247,外设修复-修复U盘无法识别-exFAT U 盘存在可自动修复的错误,fail,1,0,digests/2026-11-11/0810_session-ab4625c9-353c-4f93-9890-514ed14a9b23.md
+2026-11-11 08:15:00,单条处理-recorded,fail,session-92f5ef49-13ab-410a-8220-cae749448f58,2005753,test_mycase_248,外设修复-修复U盘无法识别--无错误的 NTFS U 盘,fail,1,0,digests/2026-11-11/0815_session-92f5ef49-13ab-410a-8220-cae749448f58.md
+2026-11-11 08:20:00,单条处理-环境阻断,blocked,session-5d0124f3-17a8-4889-95d8-f91e075d349d,,,,,1,0,digests/2026-11-11/0820_session-5d0124f3-17a8-4889-95d8-f91e075d349d.md
+2026-11-11 08:20:00,监控恢复-巡检,normal,session-198d1a2d-8cfe-42ce-b46c-9678d18b8a93,,,,,1,0,digests/2026-11-11/0820_session-198d1a2d-8cfe-42ce-b46c-9678d18b8a93.md
+2026-11-11 08:25:00,单条处理-recorded,fail,session-81ab2e08-e1a8-4ca4-8fcd-9db388878f07,2005757,test_mycase_250,外设修复-修复U盘无法识别--无错误的 ext4 U 盘,fail,1,0,digests/2026-11-11/0825_session-81ab2e08-e1a8-4ca4-8fcd-9db388878f07.md
+2026-11-11 08:30:00,单条处理-recorded,fail,session-5ee1042c-5359-4443-ba9e-8c78c59e3df9,2005759,test_mycase_251,外设修复-修复U盘无法识别-- ext4 U 盘存在可自动修复的错误,fail,1,0,digests/2026-11-11/0830_session-5ee1042c-5359-4443-ba9e-8c78c59e3df9.md
+2026-11-11 08:35:00,单条处理-忙等待,busy,session-84a76d03-8072-4158-b16f-3c9622b0fdf1,,,,,1,0,digests/2026-11-11/0835_session-84a76d03-8072-4158-b16f-3c9622b0fdf1.md
+2026-11-11 08:40:00,单条处理-忙等待,busy,session-38b523a2-41c6-4c51-9527-b080b13d5028,,,,,1,0,digests/2026-11-11/0840_session-38b523a2-41c6-4c51-9527-b080b13d5028.md
+2026-11-11 08:40:00,监控恢复-巡检,normal,session-2adb26ca-6ba4-4d31-abd4-37350532a777,,,,,1,0,digests/2026-11-11/0840_session-2adb26ca-6ba4-4d31-abd4-37350532a777.md
+2026-11-11 08:45:00,单条处理-recorded,fail,session-a38f7b84-a560-4986-bd5d-374461ecdab3,2005761,test_mycase_032,外设修复-修复U盘无法识别--设备路径不存在,fail,1,1,digests/2026-11-11/0845_session-a38f7b84-a560-4986-bd5d-374461ecdab3.md
+2026-11-11 08:50:00,单条处理-忙等待,busy,session-79d649e9-a900-428e-bb81-6a51ec6f34e7,,,,,1,0,digests/2026-11-11/0850_session-79d649e9-a900-428e-bb81-6a51ec6f34e7.md
+2026-11-11 08:55:00,单条处理-recorded,fail,session-c3c32b26-40d9-41ce-bb94-bec459cfd759,2005763,test_mycase_153,应用修复-修复微信-正常关闭运行中的微信进程,fail,1,0,digests/2026-11-11/0855_session-c3c32b26-40d9-41ce-bb94-bec459cfd759.md
+2026-11-11 09:00:00,单条处理-recorded,fail,session-79600db3-bc41-4ec2-b42e-e1edcb5e5138,2005765,test_mycase_033,应用修复-修复微信-清理Linux原生微信缓存目录,fail,1,0,digests/2026-11-11/0900_session-79600db3-bc41-4ec2-b42e-e1edcb5e5138.md
+2026-11-11 09:00:00,监控恢复-巡检,normal,session-81325b80-7718-4f4a-b751-75637cb5657e,,,,,1,0,digests/2026-11-11/0900_session-81325b80-7718-4f4a-b751-75637cb5657e.md
+2026-11-11 09:05:00,单条处理-recorded,fail,session-00fadf9e-a16d-4af4-9a77-522e68192f52,2005767,test_mycase_154,应用修复-修复微信-磁盘空间不足执行脚本,fail,1,0,digests/2026-11-11/0905_session-00fadf9e-a16d-4af4-9a77-522e68192f52.md
+2026-11-11 09:10:00,单条处理-忙等待,busy,session-1a3bab25-f8c2-437a-8283-a1ea95fa56f8,,,,,1,0,digests/2026-11-11/0910_session-1a3bab25-f8c2-437a-8283-a1ea95fa56f8.md
+2026-11-11 09:15:00,单条处理-recorded,pass,session-d988b128-5bd5-4e6d-9e0b-cbc9dc5bcc1b,2005769,test_mycase_155,应用修复-修复微信-修复后微信功能验证,pass,2,0,digests/2026-11-11/0915_session-d988b128-5bd5-4e6d-9e0b-cbc9dc5bcc1b.md
+2026-11-11 09:20:00,单条处理-环境阻断,blocked,session-9431bece-1007-493f-b859-dc38792f28c9,,,,,1,0,digests/2026-11-11/0920_session-9431bece-1007-493f-b859-dc38792f28c9.md
+2026-11-11 09:20:00,监控恢复-巡检,normal,session-715e8371-ffac-4761-8819-77d048588901,,,,,1,0,digests/2026-11-11/0920_session-715e8371-ffac-4761-8819-77d048588901.md
+2026-11-11 09:25:00,单条处理-recorded,pass,session-59402b56-5459-4fcf-9310-e8997ae070bf,2005771,test_mycase_156,应用修复-修复企业微信-正常关闭运行中的企业微信进程,pass,1,0,digests/2026-11-11/0925_session-59402b56-5459-4fcf-9310-e8997ae070bf.md
+2026-11-11 09:30:00,单条处理-忙等待,busy,session-510cad35-cf52-461c-bb7e-cd5fb3dc4169,,,,,1,0,digests/2026-11-11/0930_session-510cad35-cf52-461c-bb7e-cd5fb3dc4169.md
+2026-11-11 09:35:00,单条处理-recorded,pass,session-576f6151-4326-4fb5-817c-74749472e28b,2005773,test_mycase_157,应用修复-修复企业微信-清理wine企业微信的缓存目录,pass,1,0,digests/2026-11-11/0935_session-576f6151-4326-4fb5-817c-74749472e28b.md
+2026-11-11 09:40:00,单条处理-recorded,pass,session-1f4cacc5-74a9-4a64-818f-c4cadb6cd4d6,2005775,test_mycase_158,应用修复-修复企业微信-磁盘空间不足执行脚本,pass,1,0,digests/2026-11-11/0940_session-1f4cacc5-74a9-4a64-818f-c4cadb6cd4d6.md
+2026-11-11 09:40:00,监控恢复-巡检,normal,session-2188596c-e306-4bcd-9c0c-ffca05b66488,,,,,1,0,digests/2026-11-11/0940_session-2188596c-e306-4bcd-9c0c-ffca05b66488.md
+2026-11-11 09:45:00,单条处理-环境阻断,blocked,session-3863aeea-3eac-4ba6-989e-4cc9dd0acc96,,,,,1,0,digests/2026-11-11/0945_session-3863aeea-3eac-4ba6-989e-4cc9dd0acc96.md
+2026-11-11 09:50:00,单条处理-recorded,pass,session-202d3b92-a397-4ce5-ad75-9abd7a605431,2005777,test_mycase_159,应用修复-修复企业微信-修复后企业微信功能验证,pass,1,0,digests/2026-11-11/0950_session-202d3b92-a397-4ce5-ad75-9abd7a605431.md
+2026-11-11 09:55:00,未执行-鉴权失败,auth-error,session-5a30eb1d-6ff5-4763-84e4-4c061ec6ddcd,,,,,1,0,digests/2026-11-11/0955_session-5a30eb1d-6ff5-4763-84e4-4c061ec6ddcd.md
+2026-11-11 10:00:00,单条处理-recorded,pass,session-6cfeefe5-6198-4124-8e9a-cf17bba2cece,2005779,test_mycase_160,应用修复-修复QQ-正常关闭运行中的QQ进程,pass,1,1,digests/2026-11-11/1000_session-6cfeefe5-6198-4124-8e9a-cf17bba2cece.md
+2026-11-11 10:00:00,监控恢复-巡检,normal,session-9f0f04d2-b0be-4feb-85bc-367295aa150f,,,,,1,0,digests/2026-11-11/1000_session-9f0f04d2-b0be-4feb-85bc-367295aa150f.md
+2026-11-11 10:05:00,单条处理-环境阻断,blocked,session-fa0205dc-6d2c-4901-936d-b49c387e410b,,,,,1,0,digests/2026-11-11/1005_session-fa0205dc-6d2c-4901-936d-b49c387e410b.md
+2026-11-11 10:10:00,单条处理-recorded,pass,session-afb14e10-a202-4e57-a3d9-7aef9c2fcf9d,2005781,test_mycase_161,应用修复-修复QQ-清理 Linux 原生 QQ 缓存目录,pass,1,0,digests/2026-11-11/1010_session-afb14e10-a202-4e57-a3d9-7aef9c2fcf9d.md
+2026-11-11 10:15:00,单条处理-recorded,pass,session-f666067d-7ec3-4756-accc-3458804a235f,2005783,test_mycase_034,应用修复-修复QQ-磁盘空间不足执行脚本,pass,1,0,digests/2026-11-11/1015_session-f666067d-7ec3-4756-accc-3458804a235f.md
+2026-11-11 10:20:00,单条处理-recorded,pass,session-91887dad-1dda-4a1b-bc1b-d74b54a67f71,2005785,test_mycase_162,应用修复-修复QQ-修复后 QQ 功能验证（原生版）,pass,1,0,digests/2026-11-11/1020_session-91887dad-1dda-4a1b-bc1b-d74b54a67f71.md
+2026-11-11 10:20:00,监控恢复-巡检,normal,session-84fa9d84-833d-4981-9327-412e7a4befbd,,,,,1,0,digests/2026-11-11/1020_session-84fa9d84-833d-4981-9327-412e7a4befbd.md
+2026-11-11 10:25:00,单条处理-忙等待,busy,session-5ef238ba-e3da-4603-a636-61c16721146f,,,,,1,0,digests/2026-11-11/1025_session-5ef238ba-e3da-4603-a636-61c16721146f.md
+2026-11-11 10:30:00,单条处理-recorded,pass,session-158afe08-1ffc-4b83-b149-2c4c3d68aa8d,2005787,test_mycase_163,应用修复-修复WPS-系统不存在Office-conf 配置文件,pass,1,1,digests/2026-11-11/1030_session-158afe08-1ffc-4b83-b149-2c4c3d68aa8d.md
+2026-11-11 10:35:00,单条处理-忙等待,busy,session-bea56a5c-9546-4184-a0cc-44a58c60509e,,,,,1,0,digests/2026-11-11/1035_session-bea56a5c-9546-4184-a0cc-44a58c60509e.md
+2026-11-11 10:40:00,单条处理-recorded,pass,session-9cbc3b59-68db-41ee-b976-072d2f98bc8e,2005789,test_mycase_164,应用修复-修复WPS-多用户场景下，A用户使用WPS，在B用户下打开doc文档,pass,1,1,digests/2026-11-11/1040_session-9cbc3b59-68db-41ee-b976-072d2f98bc8e.md
+2026-11-11 10:40:00,监控恢复-巡检,normal,session-ee82d70c-b8ee-42ad-bc3c-5d8a43ee2c19,,,,,1,0,digests/2026-11-11/1040_session-ee82d70c-b8ee-42ad-bc3c-5d8a43ee2c19.md
+2026-11-11 10:45:00,单条处理-忙等待,busy,session-cf81b014-a613-4dec-b6c7-4c5d234502c0,,,,,1,0,digests/2026-11-11/1045_session-cf81b014-a613-4dec-b6c7-4c5d234502c0.md
+2026-11-11 10:50:00,未执行-鉴权失败,auth-error,session-de8d4c0a-5c80-4768-bee0-c295ae7ae2bb,,,,,1,0,digests/2026-11-11/1050_session-de8d4c0a-5c80-4768-bee0-c295ae7ae2bb.md
+2026-11-11 10:55:00,单条处理-忙等待,busy,session-8e68d000-baf1-4436-aee8-52b166b3a47d,,,,,1,0,digests/2026-11-11/1055_session-8e68d000-baf1-4436-aee8-52b166b3a47d.md
+2026-11-11 11:00:00,单条处理-忙等待,busy,session-b14fcb24-cac5-45a6-8be1-c9fdf7568063,,,,,1,0,digests/2026-11-11/1100_session-b14fcb24-cac5-45a6-8be1-c9fdf7568063.md
+2026-11-11 11:00:00,监控恢复-巡检,normal,session-6b29df4d-ca55-429f-a940-b13b15e18f1c,,,,,1,0,digests/2026-11-11/1100_session-6b29df4d-ca55-429f-a940-b13b15e18f1c.md
+2026-11-11 11:05:00,单条处理-recorded,pass,session-03ae1885-1290-4cf2-bb12-c5b8d2b3017e,2005791,test_mycase_165,应用修复-修复WPS-修复后双击文档可正常打开 WPS,pass,1,0,digests/2026-11-11/1105_session-03ae1885-1290-4cf2-bb12-c5b8d2b3017e.md
+2026-11-11 11:10:00,单条处理-忙等待,busy,session-f30a80c6-d192-471d-840a-01dda3b8c1b2,,,,,1,0,digests/2026-11-11/1110_session-f30a80c6-d192-471d-840a-01dda3b8c1b2.md
+2026-11-11 11:15:00,单条处理-忙等待,busy,session-f84cfea6-5a95-476b-9a52-f5f8413c2754,,,,,1,0,digests/2026-11-11/1115_session-f84cfea6-5a95-476b-9a52-f5f8413c2754.md
+2026-11-11 11:20:00,单条处理-忙等待,busy,session-908924c5-7d83-4df4-807c-5ee0df1b92c3,,,,,1,0,digests/2026-11-11/1120_session-908924c5-7d83-4df4-807c-5ee0df1b92c3.md
+2026-11-11 11:20:00,监控恢复-巡检,normal,session-a67cb846-fbaf-4160-980c-2ac06fbc66da,,,,,1,0,digests/2026-11-11/1120_session-a67cb846-fbaf-4160-980c-2ac06fbc66da.md
+2026-11-11 11:25:00,单条处理-recorded,pass,session-f6da94cb-6705-4f51-a67b-9caad434ae18,2005793,test_mycase_166,应用修复-输入法修复-正常关闭运行中的输入法进程,pass,1,1,digests/2026-11-11/1125_session-f6da94cb-6705-4f51-a67b-9caad434ae18.md
+2026-11-11 11:30:00,单条处理-忙等待,busy,session-6500a4da-ccb6-4acc-a56b-b3f9ab3a5efa,,,,,1,0,digests/2026-11-11/1130_session-6500a4da-ccb6-4acc-a56b-b3f9ab3a5efa.md
+2026-11-11 11:35:00,单条处理-环境阻断,blocked,session-8e897778-16b6-4a78-986d-fba94a28469c,,,,,1,0,digests/2026-11-11/1135_session-8e897778-16b6-4a78-986d-fba94a28469c.md
