@@ -74,6 +74,14 @@ class DetectionWidget(MyAppWidget):
             out_debug_flag=False,
         ).strip()
 
+    def get_ssh_dir_mode(self) -> str:
+        """读取 ~/.ssh 的权限位(八进制三 位, 如 700)"""
+        return self.run_cmd(
+            f"stat -c %a {self.SSH_DIR} 2>/dev/null",
+            timeout=5,
+            out_debug_flag=False,
+        ).strip()
+
     def has_ssh_private_key(self) -> bool:
         """~/.ssh 下是否存在产品识别的私钥文件"""
         output = self.run_cmd(
@@ -87,11 +95,27 @@ class DetectionWidget(MyAppWidget):
     def setup_ssh_key_permission_abnormal(self) -> bool:
         """构造 ssh 密钥检测异常: sudo chown root:root ~/.ssh
 
-        产品仅在 ~/.ssh 存在私钥时才汇总权限结论(detectSSHKey: 无私钥直接判通过),
-        测试机默认没有私钥, 因此缺少时先生成临时 ed25519 私钥, 再执行 chown;
-        目录属主与登录用户不一致即被判定为异常。
+        V25 的 ssh 检测跑在会话侧守护进程(session_daemon_service 注册表:
+        20 个 id 全部有检测, 其中 ssh_key 的检测与修复都在会话侧), 以登录用户
+        身份执行 SystemDetector::detectSSHKey(home):
+          - ~/.ssh 自身的属主与 home 属主不一致 -> ownerOk=false, 判定异常;
+          - 但只有「私钥可见」时才会汇总结论: checkSshFiles 用
+            QDir::entryList 枚举, 取不到任何私钥 -> hasSSHKey=false ->
+            permissionCheckPassed 被强制置 true, 直接判通过。
+        因此仅 chown 而不放开目录权限(默认 ~/.ssh 是 700) 会让检测方看不到私钥,
+        构造自我失效(实测 2026-11-17 x86_64-46 回归: ssh_key 结论 ok=True)。
+        这里把目录改成 755: 目标模式 755 不超限(modeOk 仍为 true), 属主错误仍被
+        判出(ownerOk=false), 同时登录用户可以进入目录枚举到私钥。
+        私钥需在 chown 之前生成(root 属主 755 目录下普通用户无法创建文件)。
         """
         self.created_ssh_key = False
+        self.ssh_dir_original_mode = self.get_ssh_dir_mode()
+        # 测试机可能不存在 ~/.ssh, ssh-keygen 不会自动创建父目录
+        self.run_cmd(
+            f"mkdir -p {self.SSH_DIR} && chmod 700 {self.SSH_DIR}",
+            timeout=10,
+            out_debug_flag=False,
+        )
         if not self.has_ssh_private_key():
             self.run_cmd(
                 f"ssh-keygen -t ed25519 -N '' -f {self.SSH_DIR}/id_ed25519 -q",
@@ -104,10 +128,20 @@ class DetectionWidget(MyAppWidget):
             timeout=10,
             out_debug_flag=False,
         )
-        return self.get_ssh_dir_owner() == "root"
+        self.sudo_run_cmd(
+            f"chmod 755 {self.SSH_DIR}",
+            timeout=10,
+            out_debug_flag=False,
+        )
+        # 前置生效校验: 属主错位(异常源) + 目录仍可被登录用户枚举(私钥可见)
+        return (
+            self.get_ssh_dir_owner() == "root"
+            and self.get_ssh_dir_mode() == "755"
+            and self.has_ssh_private_key()
+        )
 
     def cleanup_ssh_key_permission(self):
-        """恢复 ~/.ssh 属主, 并删除前置构造的临时私钥"""
+        """恢复 ~/.ssh 属主与原始权限位, 并删除前置构造的临时私钥"""
         user = self.run_cmd("id -un", timeout=5, out_debug_flag=False).strip()
         group = self.run_cmd("id -gn", timeout=5, out_debug_flag=False).strip()
         self.sudo_run_cmd(
@@ -115,6 +149,13 @@ class DetectionWidget(MyAppWidget):
             timeout=10,
             out_debug_flag=False,
         )
+        original_mode = getattr(self, "ssh_dir_original_mode", "")
+        if original_mode:
+            self.sudo_run_cmd(
+                f"chmod {original_mode} {self.SSH_DIR}",
+                timeout=10,
+                out_debug_flag=False,
+            )
         if getattr(self, "created_ssh_key", False):
             self.run_cmd(
                 f"rm -f {self.SSH_DIR}/id_ed25519 {self.SSH_DIR}/id_ed25519.pub",

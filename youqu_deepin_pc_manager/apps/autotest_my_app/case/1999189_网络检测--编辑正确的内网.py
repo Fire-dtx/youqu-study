@@ -4,15 +4,40 @@
 :Author:ut000635
 :Date  :2026/10/23
 """
+import pytest
+from urllib.error import HTTPError
+from urllib.error import URLError
+from urllib.request import Request
+from urllib.request import urlopen
+
 from apps.autotest_my_app.case import BaseCase
 from apps.autotest_my_app.widget import MyAppWidget
 from src import logger
 
-# 正确的内网地址: www.uniontech.com 在测试环境可解析, ping 通(约 21ms),
-# HTTP 返回 301, 可作为"正确的域名"场景。
+# 正确的内网地址: www.uniontech.com 在具备外网的测试环境可解析, HTTP 可达,
+# 可作为"正确的域名"场景。网络隔离环境下该地址不可达, 用例无法验证"检测正常",
+# 因此在执行前用 TCP 80/443 探测并 skip, 避免把环境问题记成产品缺陷。
 # 备选的正确 IP 10.20.42.50 在测试环境 ping 100% 丢包、HTTP 无响应,
 # 不能用于断言"检测正常", 故不使用。
 VALID_INTRANET_ADDRESS = "www.uniontech.com"
+
+
+def _is_reachable(host, timeout=5):
+    """当前测试网络能否通过 HTTP(S) 访问目标地址。"""
+    for scheme in ("https", "http"):
+        try:
+            request = Request(
+                f"{scheme}://{host}", headers={"User-Agent": "pc-manager-autotest"}
+            )
+            with urlopen(request, timeout=timeout) as response:
+                if response.status < 500:
+                    return True
+        except HTTPError as exc:
+            if exc.code < 500:
+                return True
+        except (URLError, OSError):
+            continue
+    return False
 
 
 class TestMyCase(BaseCase):
@@ -25,6 +50,11 @@ class TestMyCase(BaseCase):
         3. 点击"网络检测"卡片后 网络访问(network_connectivity) 结论正常,
            且检测目标就是该内网地址, 网络检测 0 项问题。
         用例结束恢复原始网络设置。"""
+        if not _is_reachable(VALID_INTRANET_ADDRESS):
+            pytest.skip(
+                f"前置不满足: {VALID_INTRANET_ADDRESS} 在当前测试网络 HTTP(S) "
+                "不可达, 无法验证内网检测正常"
+            )
         widget = MyAppWidget(check_start=False)
         widget.backup_network_settings()
         try:

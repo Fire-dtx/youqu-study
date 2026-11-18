@@ -87,6 +87,17 @@ from src.recording_screen import recording_screen
 FLAG_FEEL = "=" * 10
 LN = "\n"
 
+_SCREEN_LOCK_GUARD = None
+
+
+def _get_screen_lock_guard():
+    global _SCREEN_LOCK_GUARD
+    if _SCREEN_LOCK_GUARD is None:
+        from apps.autotest_my_app.screen_guard import ScreenLockGuard
+
+        _SCREEN_LOCK_GUARD = ScreenLockGuard()
+    return _SCREEN_LOCK_GUARD
+
 
 class LabelType(Enum):
     L1 = allure.severity_level.BLOCKER
@@ -200,6 +211,12 @@ def pytest_sessionstart(session):
     )
     logger.info(f"当前系统显示协议为 {_display.title()}")
     session.config.option.start_time = datetime.now()
+
+    if not session.config.option.collectonly:
+        try:
+            _get_screen_lock_guard().disable()
+        except BaseException as exc:
+            logger.warning(f"[锁屏保护] 关闭锁屏失败: {exc}")
 
     user = session.config.option.pms_user
     password = session.config.option.pms_password
@@ -571,6 +588,11 @@ def pytest_collection_finish(session):
 
 
 def pytest_runtest_setup(item):
+    if not item.config.option.collectonly:
+        try:
+            _get_screen_lock_guard().ensure_unlocked()
+        except BaseException as exc:
+            logger.warning(f"[锁屏保护] 检查锁屏失败: {exc}")
     try:
         from src.dogtail_utils import set_current_case
         set_current_case(item.nodeid)
@@ -871,6 +893,12 @@ def pytest_sessionfinish(session):
         log_lookup_summary()
     except BaseException as exc:
         logger.warning(f"[控件查找汇总] 输出失败: {exc}")
+
+    if _SCREEN_LOCK_GUARD is not None:
+        try:
+            _SCREEN_LOCK_GUARD.restore()
+        except BaseException as exc:
+            logger.warning(f"[锁屏保护] 恢复锁屏配置失败: {exc}")
 
 
 # pylint: disable=unused-argument

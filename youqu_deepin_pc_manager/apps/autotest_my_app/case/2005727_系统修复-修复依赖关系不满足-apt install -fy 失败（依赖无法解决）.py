@@ -4,6 +4,8 @@
 :Author:ut000635
 :Date  :2026/10/13
 """
+import pytest
+
 from apps.autotest_my_app.case import BaseCase
 from apps.autotest_my_app.widget import MyAppWidget
 from src import sleep
@@ -38,17 +40,15 @@ class TestMyCase(BaseCase):
         try:
             # 前置: 网络与软件源可用, apt update 能成功
             self.assert_true(widget.get_network_connection_status())
-            # 测试机 driver/security 两个 HTTPS 源握手失败(环境失效, 非产品问题),
-            # 临时停用这两个源使 apt update 可用, 用例结束时整体恢复原配置
+            # 测试机 driver/security/appstore 源失效(环境失效, 非产品问题),
+            # 临时停用后验证 apt update; 仍失败则跳过, 不计为产品缺陷
             widget.backup_apt_sources()
-            widget.sudo_run_cmd(
-                "for f in /etc/apt/sources.list.d/driver.list "
-                "/etc/apt/sources.list.d/security.list; do "
-                "[ -f \"$f\" ] && sed -i -E 's/^[[:space:]]*deb /# deb /' \"$f\"; "
-                "done; echo done",
-                timeout=10, out_debug_flag=False,
-            )
-            self.assert_true(widget.apt_update_success())
+            apt_ok, apt_out = widget.prepare_apt_for_repair()
+            if not apt_ok:
+                pytest.skip(
+                    "测试机 apt 源不可用, 无法进入依赖修复分支: "
+                    f"{apt_out[-300:]}"
+                )
 
             # 构造"依赖无法解决"状态
             package = widget.break_dependency_unresolvable()

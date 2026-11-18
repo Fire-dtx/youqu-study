@@ -12,6 +12,7 @@ import logging
 import os
 import re
 import shutil
+import sys
 import tempfile
 import time
 import zipfile
@@ -29,6 +30,14 @@ logger = logging.getLogger(__name__)
 
 APP_DESKTOP_FILE = "deepin-pc-manager.desktop"
 APP_DESKTOP_FULL_PATH = "/usr/share/applications/deepin-pc-manager.desktop"
+# 测试机已知不可用的 apt 源: 前两个 TLS 握手失败, appstore 的 InRelease 已过期。
+# 这些源与依赖关系修复用例的目标分支无关, 但会让 apt-get update 返回 100,
+# 使产品走"系统仓库更新失败"分支。用例前置临时注释, finally 中整体恢复。
+APT_KNOWN_BAD_HOSTS = (
+    "pro-driver-packages.uniontech.com",
+    "professional-security.chinauos.com",
+    "pro-store-packages.uniontech.com",
+)
 BROWSER_DESKTOP_FILE = "org.deepin.browser.desktop"
 BROWSER_DESKTOP_FULL_PATH = "/usr/share/applications/org.deepin.browser.desktop"
 # 启动管理器开关的 accessibleName 为 startup_<GenericName 或 Name>,
@@ -48,17 +57,19 @@ STARTUP_NON_ITEM_NAMES = {
 }
 # 启动项开关的 AT-SPI 角色
 STARTUP_SWITCH_ROLES = {"toggle button", "check box", "check_box"}
-# V20 启动器右键菜单项相对菜单窗口左上角的垂直偏移(像素)
-LAUNCHER_MENU_ITEM_OFFSETS = {
-    "打开": 22,
-    "发送到桌面": 48,
-    "从桌面上移除": 48,
-    "发送到任务栏": 71,
-    "从任务栏上移除": 71,
-    "开机自动启动": 101,
-    "取消开机自动启动": 101,
-    "卸载": 126,
+# 启动器右键菜单固定 5 项, 此处记录菜单项所在行(0 起), 不记录像素偏移。
+# 菜单高度随主题/字体缩放变化, 固定偏移会把"开机自动启动"点到相邻项。
+LAUNCHER_MENU_ITEM_ROWS = {
+    "打开": 0,
+    "发送到桌面": 1,
+    "从桌面上移除": 1,
+    "发送到任务栏": 2,
+    "从任务栏上移除": 2,
+    "开机自动启动": 3,
+    "取消开机自动启动": 3,
+    "卸载": 4,
 }
+LAUNCHER_MENU_ROW_COUNT = 5
 
 HOME_DIR = expanduser("~")
 # 大文件隔离暂存目录: 放在 $HOME 之外, 产品扫描范围覆盖家目录(含隐藏目录),
@@ -637,7 +648,11 @@ class MyAppWidget(BaseWidget):
             "root.send_event(event,X.SubstructureRedirectMask|X.SubstructureNotifyMask);"
             "d.flush()"
         )
-        self.run_cmd(f'python3 -c "{script}"', timeout=5, out_debug_flag=False)
+        self.run_cmd(
+            f"{quote(sys.executable)} -c {quote(script)}",
+            timeout=5,
+            out_debug_flag=False,
+        )
         sleep(1)
 
     def maximize_window_by_shortcut(self):
@@ -864,7 +879,11 @@ class MyAppWidget(BaseWidget):
             out_debug_flag=False,
         )
         sleep(2)
-        return True
+        # 右键位置落空时不会生成 162x170 左右的菜单窗口, 必须确认后再点菜单,
+        # 否则后续 click_launcher_menu 可能命中残留菜单/其它窗口。
+        return any(
+            100 <= w[3] <= 300 and w[4] <= 300 for w in self.get_launcher_windows()
+        )
 
     def click_launcher_menu(self, item_text) -> bool:
         """点击启动器右键菜单项
@@ -872,16 +891,18 @@ class MyAppWidget(BaseWidget):
         V20 启动器右键菜单固定 5 项, 其中第 2/3 项文本随驻留状态切换:
         未驻留为"发送到桌面"/"发送到任务栏", 已驻留为"从桌面上移除"/
         "从任务栏上移除", 位置不变。菜单窗口左上角即右键点击位置。
+        行中心按菜单实际高度等分计算, 不依赖主题字体下的固定像素偏移。
         """
-        offset = LAUNCHER_MENU_ITEM_OFFSETS.get(item_text)
-        if offset is None:
+        row = LAUNCHER_MENU_ITEM_ROWS.get(item_text)
+        if row is None:
             return False
         menus = [
             w for w in self.get_launcher_windows() if 100 <= w[3] <= 300 and w[4] <= 300
         ]
         if not menus:
             return False
-        _, x, y, width, _ = menus[-1]
+        _, x, y, width, height = menus[-1]
+        offset = int(height * (row + 0.5) / LAUNCHER_MENU_ROW_COUNT)
         self.run_cmd(
             f"xdotool mousemove --sync {x + width // 2} {y + offset} click 1",
             timeout=5,
@@ -5356,6 +5377,41 @@ class MyAppWidget(BaseWidget):
         expected = getattr(self, "_apt_backup_deb_count", None)
         logger.info(f"[restore_apt_sources] 恢复后有效 deb 行数={count} 备份时={expected}")
         return expected is None or count == expected
+
+    def prepare_apt_for_repair(self, timeout=300):
+        """停用已知失效 apt 源并验证 apt-get update
+
+        调用前必须已执行 backup_apt_sources; 用例 finally 中的
+        restore_apt_sources 会整体还原 /etc/apt。
+
+        :return: (apt update 是否成功, 最后一次 apt 输出)
+        """
+        hosts = "|".join(re.escape(host) for host in APT_KNOWN_BAD_HOSTS)
+        out, rc = self.sudo_run_cmd(
+            "for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.list; do "
+            "[ -f \"$f\" ] || continue; "
+            f"sed -i -E '/{hosts}/ "
+            "s|^([[:space:]]*deb(-src)?[[:space:]])|# \\1|' \"$f\"; "
+            "done; "
+            "for f in /etc/apt/sources.list.d/*.sources; do "
+            "[ -f \"$f\" ] || continue; "
+            f"grep -qE '{hosts}' \"$f\" && "
+            "mv \"$f\" \"$f.autotest_disabled\"; "
+            "done; echo done",
+            timeout=20,
+            out_debug_flag=False,
+            return_code=True,
+        )
+        logger.info(
+            f"[prepare_apt_for_repair] 停用已知失效源 rc={rc} out={out!r}"
+        )
+        apt_out, apt_rc = self.apt_update_with_return_code(timeout=timeout)
+        if apt_rc != 0:
+            logger.warning(
+                f"[prepare_apt_for_repair] apt update 仍失败(rc={apt_rc}): "
+                f"{apt_out[-1000:]}"
+            )
+        return apt_rc == 0, apt_out
 
     def set_invalid_release_repo(self):
         """将 apt 源指向可达但无 Release 文件的仓库地址, 使 apt update 必定失败
@@ -17009,10 +17065,17 @@ except OSError:
 # 允许出现在日志里的非私密值: 本地回环/未指定地址、系统公共路径
 IP_ALLOW = {"127.0.0.1", "0.0.0.0"}
 EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
-IP_RE = re.compile(r"(?<![0-9.])((?:[0-9]{1,3}\.){3}[0-9]{1,3})(?![0-9.])")
+IP_RE = re.compile(
+    r"(?<![0-9A-Za-z_.-])((?:[0-9]{1,3}\.){3}[0-9]{1,3})(?![0-9A-Za-z_.-])"
+)
 MAC_RE = re.compile(r"(?<![0-9A-Fa-f:])([0-9A-Fa-f]{2}(?::[0-9A-Fa-f]{2}){5})(?![0-9A-Fa-f:])")
 UUID_RE = re.compile(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
 MACHINE_RE = re.compile(r"[Mm]achine[_ ]?[Cc]ode\s*[:=]\s*\S+")
+# XDG 启动通知 ID 由 startdde 生成, 形如
+# startdde-1578-<hostname>-deepin-pc-manager-launch-0_TIME1080。其中只有
+# 主机名, 不是产品记录的用户名; 测试机主机名常包含用户名, 会在裸用户名
+# 检查中误报。该 ID 是协议字段, 扫描用户名前整体替换。
+STARTUP_ID_RE = re.compile(r"(startup notification (?:initiated|completed):\s+)\S+")
 
 # 过短的密码(如测试机设置的 "1")会在任意日志行中误命中, 只在长度足够时检查
 pw_variants = set()
@@ -17045,6 +17108,7 @@ for ln in lines:
     if username:
         stripped = ln.replace("/home/%s" % username, "/home/<user>")
         stripped = stripped.replace("uid=%s" % username, "uid=<user>")
+        stripped = STARTUP_ID_RE.sub(r"\1<startup-id>", stripped)
         if username in stripped:
             hit(found, "username", ln)
 
@@ -17062,7 +17126,8 @@ print(json.dumps({
         覆盖: 姓名/指纹(无法由日志模式识别, 归为人工项)、密码(明文与 Base64)、
         邮箱、住址(人工项)、电话、MAC、IP、用户名、MachineCode、UUID。
         用户名按"非路径出现"判定: /home/<user> 这类绝对路径属于产品运行必需信息,
-        替换为 /home/<user> 后再判断是否仍有裸用户名出现。
+        替换为 /home/<user> 后再判断是否仍有裸用户名出现; XDG 启动通知 ID
+        只含主机名, 属协议字段, 同样在用户名检查前剔除。
 
         :param log_path: 日志路径, 默认取 get_pc_manager_log_path()
         :param username: 待检查用户名, 默认当前登录用户

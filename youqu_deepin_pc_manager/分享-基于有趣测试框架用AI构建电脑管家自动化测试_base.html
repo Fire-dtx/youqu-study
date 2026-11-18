@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>用 AI 构建电脑管家自动化测试 · 工程复盘</title>
+<style>
+  :root{
+    --bg:#070c15;
+    --bg2:#0b1320;
+    --surface:#0f1828;
+    --surface2:#131f33;
+    --border:#1f2d45;
+    --fg:#e8eefb;
+    --muted:#8fa2bd;
+    --c1:#5b8def;
+    --c2:#2fbf71;
+    --c3:#f2a33a;
+    --c4:#ef5b5b;
+    --c5:#a97bf0;
+    --c6:#38c9d6;
+    --pass:#2fbf71;
+    --fail:#ef5b5b;
+    --skip:#8b9bb4;
+    --blocked:#f2a33a;
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans CJK SC","Source Han Sans SC","Microsoft YaHei",sans-serif;
+    line-height:1.7;font-size:15px;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+  code{
+    font-family:ui-monospace,SFMono-Regular,"JetBrains Mono",Menlo,Consolas,monospace;
+    background:rgba(91,141,239,.12);color:#b9cdf3;padding:1px 6px;border-radius:5px;font-size:.88em;
+  }
+  a{color:var(--c1);text-decoration:none}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+
+  /* ---------- Hero ---------- */
+  .hero{position:relative;overflow:hidden;padding:92px 0 56px;
+    background:
+      radial-gradient(900px 420px at 15% -10%,rgba(91,141,239,.26),transparent 62%),
+      radial-gradient(760px 380px at 92% 4%,rgba(169,123,240,.20),transparent 60%),
+      linear-gradient(180deg,#070c15,#080e19 70%,var(--bg));
+    border-bottom:1px solid var(--border);
+  }
+  .hero::after{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);
+    background-size:44px 44px;
+    -webkit-mask-image:radial-gradient(760px 400px at 30% 0%,#000,transparent 75%);
+            mask-image:radial-gradient(760px 400px at 30% 0%,#000,transparent 75%);
+  }
+  .hero .wrap{position:relative;z-index:1}
+  .badge{
+    display:inline-flex;align-items:center;gap:8px;font-size:12.5px;letter-spacing:.06em;
+    color:#b7cdf5;background:rgba(91,141,239,.13);border:1px solid rgba(91,141,239,.35);
+    padding:5px 12px;border-radius:999px;margin-bottom:22px;
+  }
+  .badge i{width:6px;height:6px;border-radius:50%;background:var(--c2);box-shadow:0 0 8px var(--c2)}
+  h1{font-size:clamp(30px,4.6vw,52px);line-height:1.2;margin:0 0 18px;letter-spacing:-.02em;font-weight:800}
+  h1 em{font-style:normal;background:linear-gradient(92deg,#8fb4ff,#c4a6ff 55%,#7fe3c0);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lede{max-width:820px;color:#b3c2d9;font-size:16.5px;margin:0 0 8px}
+  .lede strong{color:#fff;font-weight:600}
+  .hero-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:36px}
+  .hs{background:rgba(15,24,40,.72);border:1px solid var(--border);border-radius:14px;padding:16px 18px;backdrop-filter:blur(6px)}
+  .hs b{display:block;font-size:clamp(24px,2.8vw,32px);font-weight:800;line-height:1.25}
+  .hs span{font-size:12.5px;color:var(--muted)}
+
+  /* ---------- Nav ---------- */
+  nav.toc{position:sticky;top:0;z-index:50;background:rgba(7,12,21,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+  nav.toc .wrap{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding-top:6px;padding-bottom:6px}
+  nav.toc .wrap::-webkit-scrollbar{display:none}
+  nav.toc a{white-space:nowrap;font-size:13px;color:var(--muted);padding:7px 11px;border-radius:8px;transition:.2s}
+  nav.toc a:hover{color:#fff;background:rgba(91,141,239,.16)}
+
+  /* ---------- Sections ---------- */
+  main{padding:8px 0 40px}
+  section{padding:56px 0 12px;scroll-margin-top:56px}
+  .sec-head{margin-bottom:26px}
+  .sec-head .idx{
+    display:inline-block;font-family:ui-monospace,monospace;font-size:12px;color:var(--c1);
+    border:1px solid rgba(91,141,239,.35);background:rgba(91,141,239,.1);
+    padding:2px 9px;border-radius:6px;margin-bottom:12px;letter-spacing:.08em;
+  }
+  h2{font-size:clamp(21px,2.6vw,29px);margin:0 0 8px;letter-spacing:-.01em;font-weight:700}
+  .sec-head p{margin:0;color:var(--muted);max-width:860px;font-size:14.5px}
+
+  .card{background:linear-gradient(180deg,var(--surface),var(--surface2));border:1px solid var(--border);border-radius:var(--radius);padding:22px}
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .auto{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+
+  /* reveal */
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity .65s ease,transform .65s cubic-bezier(.22,.8,.3,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  /* ---------- Stat cards ---------- */
+  .stat{position:relative;overflow:hidden}
+  .stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent,var(--c1));opacity:.85}
+  .stat .k{font-size:clamp(26px,3.1vw,36px);font-weight:800;line-height:1.2}
+  .stat .k .u{font-size:14px;font-weight:500;color:var(--muted);margin-left:3px}
+  .stat .l{font-size:13.5px;color:#cfdcf1;margin-top:4px;font-weight:600}
+  .stat .d{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.55}
+  .stat:hover{border-color:#2c3f61;transform:translateY(-2px);transition:.25s}
+
+  /* ---------- Timeline ---------- */
+  .tl{position:relative;max-width:980px;margin:0 auto}
+  .tl::before{content:"";position:absolute;left:50%;top:6px;bottom:6px;width:2px;transform:translateX(-1px);
+    background:linear-gradient(180deg,transparent,rgba(91,141,239,.5) 6%,rgba(91,141,239,.5) 94%,transparent)}
+  .tl-item{position:relative;width:50%;padding:0 38px 34px 0}
+  .tl-item:nth-child(even){margin-left:50%;padding:0 0 34px 38px}
+  .tl-item::after{content:"";position:absolute;top:9px;right:-7px;width:12px;height:12px;border-radius:50%;
+    background:var(--bg);border:2px solid var(--dot,var(--c1));box-shadow:0 0 0 4px rgba(91,141,239,.12)}
+  .tl-item:nth-child(even)::after{left:-7px;right:auto}
+  .tl-card{background:linear-gradient(180deg,var(--surface),var(--surface2));border:1px solid var(--border);
+    border-radius:13px;padding:15px 17px;transition:.25s}
+  .tl-card:hover{border-color:#31456a;transform:translateY(-2px)}
+  .tl-date{font-family:ui-monospace,monospace;font-size:12px;color:var(--c6);letter-spacing:.03em}
+  .tl-card h4{margin:3px 0 5px;font-size:15.5px}
+  .tl-card p{margin:0;font-size:13px;color:#a9b8cf}
+  .tl-card .tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:5px;margin-top:8px;margin-right:4px;
+    border:1px solid var(--border);color:var(--muted);background:rgba(255,255,255,.03)}
+  .tl-card .tag.hot{color:#ffd9a3;border-color:rgba(242,163,58,.4);background:rgba(242,163,58,.1)}
+  .tl-card .tag.ok{color:#a6ecc8;border-color:rgba(47,191,113,.4);background:rgba(47,191,113,.1)}
+
+  /* ---------- Production lines ---------- */
+  .line{position:relative;padding-top:8px}
+  .line .cap{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+  .line .cap .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+  .line .cap h3{margin:0;font-size:16px}
+  .line .cap small{color:var(--muted);font-size:12px}
+  .flow{list-style:none;margin:0 0 14px;padding:0}
+  .flow li{position:relative;padding:7px 0 7px 26px;font-size:13.2px;color:#c6d4e8}
+  .flow li::before{content:"";position:absolute;left:7px;top:14px;width:8px;height:8px;border-radius:2px;
+    background:var(--accent);opacity:.85;transform:rotate(45deg)}
+  .flow li:not(:last-child)::after{content:"";position:absolute;left:10.5px;top:24px;bottom:-4px;width:1px;background:var(--border)}
+  .kv{font-size:12.5px;color:var(--muted);border-top:1px dashed var(--border);padding-top:10px;margin-top:auto}
+  .kv b{color:#dfe9f8;font-weight:600}
+  .kv div{display:flex;justify-content:space-between;gap:10px;padding:2.5px 0}
+  .line{display:flex;flex-direction:column}
+
+  /* ---------- Bars ---------- */
+  .mrow{display:grid;grid-template-columns:212px 1fr 96px;gap:12px;align-items:center;margin-bottom:11px}
+  .mrow .name{font-size:12.8px;line-height:1.4}
+  .mrow .name code{font-size:11.5px}
+  .mrow .name small{display:block;color:var(--muted);font-size:11.5px}
+  .track{height:22px;background:#121c2d;border-radius:6px;overflow:hidden}
+  .bar{height:100%;display:flex;border-radius:6px;overflow:hidden;width:0;min-width:2px;transition:width 1.15s cubic-bezier(.22,.8,.3,1)}
+  .reveal.in .bar{width:var(--w)}
+  .bar i{display:block;height:100%}
+  .mval{font-size:12.5px;color:#cfdcf1;text-align:right;font-variant-numeric:tabular-nums}
+  .mval small{display:block;color:var(--muted);font-size:11px}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;font-size:12px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+
+  /* ---------- Donuts ---------- */
+  .donuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+  .dcase{text-align:center;padding:20px 14px}
+  .dcase h3{margin:0 0 2px;font-size:15.5px}
+  .dcase .sub{color:var(--muted);font-size:12px;margin-bottom:12px}
+  .donut-wrap{position:relative;width:168px;margin:0 auto}
+  .donut{display:block;width:168px;height:168px}
+  .dcenter{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+  .dcenter b{font-size:29px;line-height:1.05;font-weight:800}
+  .dcenter span{font-size:11.5px;color:var(--muted)}
+  .dlegend{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:11.5px;color:var(--muted)}
+  .dlegend span{display:inline-flex;align-items:center;gap:5px}
+  .dlegend i{width:8px;height:8px;border-radius:50%}
+
+  .stack{display:flex;height:16px;border-radius:6px;overflow:hidden;background:#121c2d}
+  .stack i{display:block;height:100%;width:0;transition:width 1.15s cubic-bezier(.22,.8,.3,1)}
+  .reveal.in .stack i{width:var(--w)}
+
+  /* ---------- Funnel / ratio ---------- */
+  .funnel{display:grid;grid-template-columns:repeat(3,1fr);gap:0;align-items:stretch;margin:6px 0 4px}
+  .fcell{position:relative;padding:18px 14px;text-align:center;background:rgba(91,141,239,.06);border:1px solid var(--border)}
+  .fcell:first-child{border-radius:12px 0 0 12px}
+  .fcell:last-child{border-radius:0 12px 12px 0}
+  .fcell + .fcell{border-left:none}
+  .fcell b{font-size:clamp(24px,3vw,34px);font-weight:800;display:block;line-height:1.2}
+  .fcell span{font-size:12px;color:var(--muted)}
+  .farrow{position:absolute;right:-11px;top:50%;transform:translateY(-50%);z-index:2;
+    width:22px;height:22px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);
+    display:grid;place-items:center;font-size:11px;color:var(--muted)}
+
+  /* ---------- Experience cards ---------- */
+  .exp{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px}
+  .expc{position:relative;padding:20px 20px 18px;border-radius:14px;border:1px solid var(--border);
+    background:linear-gradient(180deg,var(--surface),var(--surface2));transition:.25s;overflow:hidden}
+  .expc::after{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),transparent)}
+  .expc:hover{transform:translateY(-3px);border-color:#31456a}
+  .expc .n{font-family:ui-monospace,monospace;font-size:11.5px;color:var(--accent);letter-spacing:.1em}
+  .expc h4{margin:6px 0 7px;font-size:15px;line-height:1.45}
+  .expc p{margin:0;font-size:12.8px;color:#a9b8cf}
+
+  /* ---------- Pitfalls ---------- */
+  .pit{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+  .pit .card h4{margin:0 0 4px;font-size:14.5px}
+  .pit .card .who{font-size:11.5px;color:var(--muted);margin-bottom:12px}
+  .plist{list-style:none;margin:0;padding:0}
+  .plist li{font-size:12.7px;padding:9px 0;border-top:1px dashed var(--border);color:#b9c8dd}
+  .plist li:first-child{border-top:none;padding-top:0}
+  .plist .bad{color:#ff9a9a}
+  .plist .fix{display:block;color:#9fd8b6;margin-top:3px}
+  .plist .fix::before{content:"→ ";color:var(--c2)}
+
+  /* ---------- Coverage ---------- */
+  .cov{display:grid;grid-template-columns:1fr auto;gap:8px 14px;align-items:center}
+  .cov .cl{font-size:13px;color:#c6d4e8}
+  .cov .cl small{color:var(--muted);font-size:11.5px;margin-left:6px}
+  .cov .cv{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right}
+  .cov .cbar{grid-column:1/-1;height:8px;border-radius:5px;background:#121c2d;overflow:hidden}
+  .cov .cbar i{display:block;height:100%;width:0;border-radius:5px;background:var(--cc,var(--c1));transition:width 1.1s cubic-bezier(.22,.8,.3,1)}
+  .reveal.in .cov .cbar i{width:var(--w)}
+
+  /* ---------- Next ---------- */
+  .next{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-top:1px dashed var(--border);font-size:13.4px;color:#c6d4e8}
+  .next:first-child{border-top:none;padding-top:0}
+  .next .p{flex:0 0 auto;font-size:11px;font-family:ui-monospace,monospace;padding:2px 8px;border-radius:5px;
+    border:1px solid rgba(91,141,239,.35);color:#b7cdf5;background:rgba(91,141,239,.1);margin-top:3px}
+  .next .p.p0{border-color:rgba(239,91,91,.4);color:#ffb4b4;background:rgba(239,91,91,.1)}
+  .next .p.p1{border-color:rgba(242,163,58,.4);color:#ffd9a3;background:rgba(242,163,58,.1)}
+
+  /* ---------- Footer ---------- */
+  footer{border-top:1px solid var(--border);padding:44px 0 64px;color:var(--muted);font-size:12.7px;background:var(--bg2)}
+  footer h4{color:var(--fg);font-size:14px;margin:0 0 10px}
+  footer ul{margin:0 0 18px;padding-left:18px}
+  footer li{margin:4px 0}
+  footer .note{color:#ffcf9e;background:rgba(242,163,58,.08);border:1px solid rgba(242,163,58,.25);
+    border-radius:10px;padding:11px 14px;font-size:12.5px}
+
+  @media (max-width:980px){
+    .hero-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .g3,.donuts{grid-template-columns:1fr}
+    .g2{grid-template-columns:1fr}
+  }
+  @media (max-width:820px){
+    .tl::before{left:9px}
+    .tl-item,.tl-item:nth-child(even){width:100%;margin-left:0;padding:0 0 26px 34px}
+    .tl-item::after,.tl-item:nth-child(even)::after{left:3px;right:auto}
+    .mrow{grid-template-columns:1fr;gap:5px}
+    .mrow .mval{text-align:left}
+    .funnel{grid-template-columns:1fr}
+    .fcell{border-radius:0!important}
+    .fcell:first-child{border-radius:12px 12px 0 0!important}
+    .fcell:last-child{border-radius:0 0 12px 12px!important}
+    .fcell + .fcell{border-left:1px solid var(--border);border-top:none}
+    .farrow{display:none}
+  }
+  @media (max-width:560px){
+    .hero-stats{grid-template-columns:1fr}
+    .g4,.auto{grid-template-columns:1fr}
+    .wrap{padding:0 16px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+    .reveal{opacity:1;transform:none}
+    .bar{width:var(--w)}
+    .stack i{width:var(--w)}
+    .cov .cbar i{width:var(--w)}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="badge"><i></i>YouQu（有趣）× AI · 电脑管家自动化测试工程复盘</div>
+    <h1>把用例建设与过检<br>改造成 <em>三条可审计的生产线</em></h1>
+    <p class="lede">
+      被测产品：统信电脑管家 <strong>deepin-pc-manager</strong>（V20 amd64 / V25 loongarch64）；框架：YouQu v2.14.0 Python PO，
+      AI 能力侧 <strong>youqu-ai 2.19.8</strong>。AI 不是"生成一堆用例"，而是被约束成
+      <strong>可审计的逐条 worker</strong>：领任务 → 读证据 → 改本地 → 真机实跑 → 失败归因 → 回退残留 → 记台账 → 交人验收。
+    </p>
+    <div class="hero-stats">
+      <div class="hs"><b class="num" data-count="742">0</b><span>AI 会话 · 三套存档合并</span></div>
+      <div class="hs"><b class="num" data-count="36606">0</b><span>模型请求 · 1,197 条用户指令</span></div>
+      <div class="hs"><b class="num" data-count="26.7" data-decimals="1">0</b><span>亿 tokens · 含缓存读</span></div>
+      <div class="hs"><b class="num" data-count="347">0</b><span>用例文件 · 68,011 行 apps 代码</span></div>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="wrap">
+    <a href="#facts">指标速览</a>
+    <a href="#timeline">时间线</a>
+    <a href="#lines">三条生产线</a>
+    <a href="#foundation">定位底座</a>
+    <a href="#models">模型分工</a>
+    <a href="#results">过检结果</a>
+    <a href="#human">人机边界</a>
+    <a href="#coverage">覆盖缺口</a>
+    <a href="#lessons">12 条经验</a>
+    <a href="#pits">踩坑与解法</a>
+    <a href="#next">下一步</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <!-- ============ 指标速览 ============ -->
+  <section id="facts">
+    <div class="sec-head reveal">
+      <div class="idx">01 / FACTS</div>
+      <h2>一页速览：规模、资产与结果</h2>
+      <p>口径统一到 2026-11-18 当前仓库（HEAD <code>7a3eae9</code>）与三套本机会话存档。三个用例条数对应不同时点：347 是当前登记，362 是 11-05 V25 登记，346 是 V20 全量报告（11-17 中间态 315 通过，11-18 终态 330 通过）。</p>
+    </div>
+
+    <div class="grid g4">
+      <div class="card stat reveal" style="--accent:var(--c1)">
+        <div class="k"><span class="num" data-count="466">0</span><span class="u">会话</span></div>
+        <div class="l">建设期 · issue 驱动并行</div>
+        <div class="d">2026-09-28 → 10-26，其中 461 个在 10-10 同日；305 个 WS 任务编号</div>
+      </div>
+      <div class="card stat reveal" style="--accent:var(--c5)">
+        <div class="k"><span class="num" data-count="64">0</span><span class="u">会话</span></div>
+        <div class="l">过检期 · 交互式构建</div>
+        <div class="d">33 个顶层 + 31 个子代理/分片；20,161 次请求、18.2 亿 tokens</div>
+      </div>
+      <div class="card stat reveal" style="--accent:var(--c6)">
+        <div class="k"><span class="num" data-count="212">0</span><span class="u">会话</span></div>
+        <div class="l">过检期 · 无人值守批次</div>
+        <div class="d">2026-11-10 20:32 → 11-11 11:35，每 5/10 分钟唤醒一次</div>
+      </div>
+      <div class="card stat reveal" style="--accent:var(--c2)">
+        <div class="k"><span class="num" data-count="268">0</span><span class="u">条</span></div>
+        <div class="l">用例资产</div>
+        <div class="d">207 条一级 + 61 条二级；PMS 侧关联 498 条</div>
+      </div>
+    </div>
+
+    <div class="grid g4" style="margin-top:14px">
+      <div class="card stat reveal" style="--accent:var(--c1)">
+        <div class="k"><span class="num" data-count="68011" data-decimals="0">0</span><span class="u">行</span></div>
+        <div class="l">apps/ Python 规模</div>
+        <div class="d">68,011 行 / 357 个文件；页面方法层 <code>my_app_widget.py</code> 26,226 行</div>
+      </div>
+      <div class="card stat reveal" style="--accent:var(--c3)">
+        <div class="k"><span class="num" data-count="745">0</span><span class="u">提交</span></div>
+        <div class="l">当前仓库提交规模</div>
+        <div class="d">745 个非合并 + 473 个合并；建设期收尾时为 709 + 470</div>
+      </div>
+      <div class="card stat reveal" style="--accent:var(--c4)">
+        <div class="k"><span class="num" data-count="229">0</span><span class="u">条</span></div>
+        <div class="l">V20 单用例过检</div>
+        <div class="d">213 通过 / 15 失败 / 1 废弃；11-18 全量终态 330 / 346 通过（95.4%）</div>
+      </div>
+      <div class="card stat reveal" style="--accent:var(--c6)">
+        <div class="k"><span class="num" data-count="8.5" data-decimals="1">0</span><span class="u">小时</span></div>
+        <div class="l">V25 全量串行耗时</div>
+        <div class="d">361 条实际执行：224 通过 / 95 失败 / 42 跳过</div>
+      </div>
+    </div>
+
+    <div class="grid g4" style="margin-top:14px">
+      <div class="card stat reveal" style="--accent:var(--c2)">
+        <div class="k"><span class="num" data-count="70.1" data-decimals="1">0</span><span class="u">%</span></div>
+        <div class="l">无人点名 · 最终通过</div>
+        <div class="d">C 组 261 条中 242 条通过，其中 125 条由 AI 自行改实现</div>
+      </div>
+      <div class="card stat reveal" style="--accent:var(--c3)">
+        <div class="k"><span class="num" data-count="212">0</span><span class="u">文件</span></div>
+        <div class="l">点名修复的实际编辑面</div>
+        <div class="d">84 条点名 → 212 个用例文件被编辑（占 61%），净波及 177</div>
+      </div>
+      <div class="card stat reveal" style="--accent:var(--c5)">
+        <div class="k"><span class="num" data-count="71.4" data-decimals="1">0</span><span class="u">%</span></div>
+        <div class="l">插件级功能覆盖</div>
+        <div class="d">35 个插件覆盖 25 个；检测项 24 个覆盖 21 个（87.5%）</div>
+      </div>
+      <div class="card stat reveal" style="--accent:var(--c1)">
+        <div class="k"><span class="num" data-count="18300">0</span><span class="u">次</span></div>
+        <div class="l">过检主力模型请求</div>
+        <div class="d"><code>deepseek-v4.1-flash-1017</code> 共 18,300 次，占全部请求的一半</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 时间线 ============ -->
+  <section id="timeline">
+    <div class="sec-head reveal">
+      <div class="idx">02 / TIMELINE</div>
+      <h2>从 12 条入口用例到 347 个用例文件</h2>
+      <p>八周建设、两条产品线复跑、一轮无人值守批次。节点之间的数字变化，是"AI 产能"与"门禁成本"共同作用的结果。</p>
+    </div>
+
+    <div class="tl">
+      <div class="tl-item reveal" style="--dot:var(--c1)">
+        <div class="tl-card">
+          <div class="tl-date">2026-08</div>
+          <h4>方案评审</h4>
+          <p>"免鉴权方案""1.1 新增检测项与修复工具"等设计材料评审，结论拆成 issue 跟踪。</p>
+        </div>
+      </div>
+      <div class="tl-item reveal" style="--dot:var(--c1)">
+        <div class="tl-card">
+          <div class="tl-date">2026-09-11</div>
+          <h4>仓库起点</h4>
+          <p>Initial commit，YouQu 框架 + 电脑管家被测对象就位。</p>
+        </div>
+      </div>
+      <div class="tl-item reveal" style="--dot:var(--c2)">
+        <div class="tl-card">
+          <div class="tl-date">2026-09-28</div>
+          <h4>规范迁移：命名即契约</h4>
+          <p>12 条入口用例从 <code>test_mycase_0XX.py</code> 统一改名为 <code>PMS用例ID_用例标题.py</code>，补全局/入口 12 条、网络检测 19 条、系统完整性 12 条，并在测试机 B 验证。</p>
+          <span class="tag ok">文件名 = csv 编号 = 方法名</span>
+        </div>
+      </div>
+      <div class="tl-item reveal" style="--dot:var(--c3)">
+        <div class="tl-card">
+          <div class="tl-date">2026-10-08 ~ 10-10</div>
+          <h4>批量建设：461 个会话同日开工</h4>
+          <p>用例清单拆成 WS-1 ~ WS-461（会话中出现 305 个）。每条用例先确认版本，再写脚本、双环境实跑、提交评审。</p>
+          <span class="tag hot">12,694 次请求</span><span class="tag hot">5.73 亿 tokens</span>
+        </div>
+      </div>
+      <div class="tl-item reveal" style="--dot:var(--c3)">
+        <div class="tl-card">
+          <div class="tl-date">2026-10-26</div>
+          <h4>建设收尾</h4>
+          <p>709 个非合并提交 + 470 个合并提交；用例资产 268 条（207 一级 + 61 二级），235 个用例文件在会话中被引用。</p>
+          <span class="tag">7 周</span><span class="tag">268 条资产</span>
+        </div>
+      </div>
+      <div class="tl-item reveal" style="--dot:var(--c6)">
+        <div class="tl-card">
+          <div class="tl-date">2026-11 上旬</div>
+          <h4>V25 全量：第一次整机压力测试</h4>
+          <p>11-05 登记 362 条、实际执行 361 条，8.5 小时串行：224 通过（62.0%）、95 失败（26.3%）、42 跳过（11.6%）。失败按主题归因，进入独立工作树修复。</p>
+          <span class="tag">单条独立进程</span><span class="tag">失败自动重跑一次</span>
+        </div>
+      </div>
+      <div class="tl-item reveal" style="--dot:var(--c5)">
+        <div class="tl-card">
+          <div class="tl-date">2026-11-10 20:32</div>
+          <h4>无人值守开跑</h4>
+          <p>编排会话启动；"单条处理"10 分钟、"监控恢复"20 分钟的定时批次开始领条。单机单 worker，心跳与文件锁保证串行。</p>
+          <span class="tag hot">每会话 1 轮</span><span class="tag hot">缓存读 96.2%</span>
+        </div>
+      </div>
+      <div class="tl-item reveal" style="--dot:var(--c5)">
+        <div class="tl-card">
+          <div class="tl-date">2026-11-11 11:35</div>
+          <h4>批次暂停：调度开销现形</h4>
+          <p>212 个会话中只有 68 个真正处理了用例；64 次忙等待、35 次环境阻断、41 次巡检。会话级 39 通过 / 35 失败，台账 26 条失败中 21 条是测试机失联误判。</p>
+          <span class="tag hot">30% 空转</span><span class="tag hot">21 条误判</span>
+        </div>
+      </div>
+      <div class="tl-item reveal" style="--dot:var(--c2)">
+        <div class="tl-card">
+          <div class="tl-date">2026-11-12</div>
+          <h4>V20 过检定稿</h4>
+          <p>229 条全部结案：213 通过、15 失败、1 废弃。15 条失败 = 9 产品缺陷 + 2 功能下线 + 3 判据与设计不符 + 1 待复验，未改产品源码、未为迎合实现改判据。</p>
+          <span class="tag ok">证据链完整</span>
+        </div>
+      </div>
+      <div class="tl-item reveal" style="--dot:var(--c2)">
+        <div class="tl-card">
+          <div class="tl-date">2026-11-16</div>
+          <h4>台账终态</h4>
+          <p>同一 229 条经修复复验：223 通过 / 4 失败 / 1 跳过 / 1 待处理。valgrind 单轮 318s → 74s；鉴权类用例 10s 判定并留 daemon 日志。</p>
+        </div>
+      </div>
+      <div class="tl-item reveal" style="--dot:var(--c6)">
+        <div class="tl-card">
+          <div class="tl-date">2026-11-17</div>
+          <h4>V20 全量复跑（中间态）</h4>
+          <p>346 条：315 通过（91.0%）、21 失败（6.1%）、1 broken、9 跳过（2.6%）。21 条失败进入 Product defects 归因；17 条“旧通过→新失败”用 5 组对照排除代码原因。</p>
+          <span class="tag">中间态 · 91.0%</span>
+        </div>
+      </div>
+      <div class="tl-item reveal" style="--dot:var(--c1)">
+        <div class="tl-card">
+          <div class="tl-date">2026-11-18</div>
+          <h4>V20 全量终态：330 / 346 通过</h4>
+          <p>02:17–06:49 复跑：330 通过（95.4%）、3 失败、2 broken、11 跳过。21 条失败收敛到 5 条残余（2 产品缺陷 + 3 脚本缺陷）；同日完成用例资产 × <code>develop/refactor</code> 覆盖分析与归档。</p>
+          <span class="tag ok">95.4% 通过</span><span class="tag">71.4% 插件覆盖</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 三条生产线 ============ -->
+  <section id="lines">
+    <div class="sec-head reveal">
+      <div class="idx">03 / PIPELINES</div>
+      <h2>三条生产线，一套事实源与证据链</h2>
+      <p>建设期解决"有没有用例"，交互过检解决"规程与归因"，无人值守解决"把 229 条逐条推进"。三者共享登记表 truth source、单入口串行、真机取证。</p>
+    </div>
+
+    <div class="grid g3">
+      <div class="card line reveal" style="--accent:var(--c3)">
+        <div class="cap"><span class="dot"></span><h3>建设期</h3><small>issue 驱动 · 并行</small></div>
+        <ul class="flow">
+          <li>用例清单 / PMS 拆成 WS 子任务</li>
+          <li>一个 Agent 领一条，确认 V20/V25</li>
+          <li>写用例 → 双环境实跑</li>
+          <li>评审提交，不自动推送</li>
+          <li>任务状态机：todo → in_review → done</li>
+        </ul>
+        <div class="kv">
+          <div><span>任务来源</span><b>305 个 WS 子任务</b></div>
+          <div><span>并发</span><b>同日 461 个会话</b></div>
+          <div><span>上下文</span><b>每 issue 冷启动</b></div>
+          <div><span>缓存复用</span><b>6.4%</b></div>
+          <div><span>单会话请求（派生）</span><b>27.2 次</b></div>
+          <div><span>主要失败模式</span><b>版本歧义 → blocked</b></div>
+        </div>
+      </div>
+
+      <div class="card line reveal" style="--accent:var(--c5)">
+        <div class="cap"><span class="dot"></span><h3>过检 · 交互</h3><small>人下目标 · 长会话</small></div>
+        <ul class="flow">
+          <li>人判定 / 授权 / 定验收口径</li>
+          <li>AI 读写仓库与真机</li>
+          <li>部署脚本、批量修复、失败归因</li>
+          <li>最长会话 143 轮，持续迭代</li>
+          <li>报告 + 台账 + 文档回写</li>
+        </ul>
+        <div class="kv">
+          <div><span>任务来源</span><b>人的批量目标</b></div>
+          <div><span>并发</span><b>单会话长跑</b></div>
+          <div><span>上下文</span><b>同会话累积</b></div>
+          <div><span>缓存复用</span><b>95.7%</b></div>
+          <div><span>单会话请求（派生）</span><b>315 次</b></div>
+          <div><span>主要失败模式</span><b>环境残留 / AT-SPI 假象</b></div>
+        </div>
+      </div>
+
+      <div class="card line reveal" style="--accent:var(--c6)">
+        <div class="cap"><span class="dot"></span><h3>过检 · 无人值守</h3><small>定时唤醒 · 单条</small></div>
+        <ul class="flow">
+          <li>登记表 229 条 → harness 台账</li>
+          <li>唤醒后 next：领 1 条，领不到即退</li>
+          <li>远端 flock 串行执行</li>
+          <li>日志 / D-Bus / 系统状态取证</li>
+          <li>record + 残留检查，监控 20 分钟巡检</li>
+        </ul>
+        <div class="kv">
+          <div><span>任务来源</span><b>登记表 + V25 全量</b></div>
+          <div><span>并发</span><b>单机单 worker</b></div>
+          <div><span>上下文</span><b>每会话 1 轮</b></div>
+          <div><span>缓存复用</span><b>96.2%</b></div>
+          <div><span>单会话请求（派生）</span><b>17.7 次</b></div>
+          <div><span>主要失败模式</span><b>空转 / 失联 / 并发 reclaim</b></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 212 会话构成 -->
+    <div class="card reveal" style="margin-top:14px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+        <div>
+          <h3 style="margin:0 0 2px;font-size:15.5px">212 个无人值守会话的构成：调度开销本身就是设计对象</h3>
+          <div style="color:var(--muted);font-size:12.5px">68 + 64 + 35 + 41 + 1 + 2 + 1 = 212</div>
+        </div>
+        <div style="color:var(--muted);font-size:12.5px">真正处理用例：<b style="color:#dfe9f8">68 / 212 = 32%</b></div>
+      </div>
+      <div class="stack" style="height:20px">
+        <i style="--w:32.1%;background:var(--c2)" title="单条处理-已记录 68"></i>
+        <i style="--w:30.2%;background:var(--c3)" title="单条处理-busy 64"></i>
+        <i style="--w:16.5%;background:var(--c4)" title="单条处理-环境阻断 35"></i>
+        <i style="--w:19.3%;background:var(--c1)" title="监控巡检 41"></i>
+        <i style="--w:0.5%;background:var(--c5)" title="监控接管 1"></i>
+        <i style="--w:0.9%;background:#7dd3fc" title="鉴权失败 2"></i>
+        <i style="--w:0.5%;background:var(--muted)" title="编排 1"></i>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--c2)"></i>已记录 68</span>
+        <span><i style="background:var(--c3)"></i>busy 空转 64</span>
+        <span><i style="background:var(--c4)"></i>环境阻断 35</span>
+        <span><i style="background:var(--c1)"></i>巡检 41</span>
+        <span><i style="background:var(--c5)"></i>接管 1</span>
+        <span><i style="background:#7dd3fc"></i>鉴权失败 2</span>
+        <span><i style="background:var(--muted)"></i>编排 1</span>
+      </div>
+      <p style="margin:14px 0 0;color:#a9b8cf;font-size:13px">
+        这 212 个会话只产生 39 通过 / 35 失败（70 个会话、覆盖 65 条用例，含重试）；台账户级失败 26 条，其中 21 条为测试机失联误判。
+        调度层的 busy 比例与误判率，和用例本身一样需要回归。
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ 定位底座 ============ -->
+  <section id="foundation">
+    <div class="sec-head reveal">
+      <div class="idx">04 / FOUNDATION</div>
+      <h2>底层定位：AT-SPI / dogtail，以及它在项目里的分叉</h2>
+      <p>PO 要“按名字找控件”，Linux 桌面只有 AT-SPI 提供结构化的控件树。项目沿用 YouQu 下发的 dogtail 栈：库本体与 youqu-ai 逐字节一致，封装层被改造成可诊断的版本，运行时不依赖外部仓库。</p>
+    </div>
+
+    <div class="grid g3">
+      <div class="card stat reveal" style="--accent:var(--c1)">
+        <div class="k"><span class="num" data-count="169">0</span><span class="u">次</span></div>
+        <div class="l">用例层直接按属性查找</div>
+        <div class="d">347 个用例文件中 <code>self.dog.*</code> 出现 169 次；另有 widget 层 95 处 <code>find_element_by_attr</code>，selector 全部藏在页面方法层</div>
+      </div>
+      <div class="card stat reveal" style="--accent:var(--c2)">
+        <div class="k"><span class="num" data-count="222">0</span><span class="u">行新增</span></div>
+        <div class="l">封装层诊断增强</div>
+        <div class="d">查找日志、未命中扫树、表达式/用例汇总、<code>probe</code> 语义；单条日志可回答“名字写错还是页面没到”</div>
+      </div>
+      <div class="card stat reveal" style="--accent:var(--c4)">
+        <div class="k"><span class="num" data-count="285">0</span><span class="u">行删除</span></div>
+        <div class="l">精简与兼容（净 −63）</div>
+        <div class="d">去掉可见性/活动帧过滤与 accessible-id 查找；V20 QML <code>showing</code> 恒 False 下，带过滤会全部假阴性</div>
+      </div>
+    </div>
+
+    <div class="card reveal" style="margin-top:14px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+        <div>
+          <h3 style="margin:0 0 2px;font-size:15.5px">五种通道，各管一段：主通道是 AT-SPI，其余只做补洞与取证</h3>
+          <div style="color:var(--muted);font-size:12.5px">2026-11-18 对 347 个用例文件 grep 统计</div>
+        </div>
+        <div style="color:var(--muted);font-size:12.5px">三层结构：<b style="color:#dfe9f8">操作 / 补洞 / 取证</b></div>
+      </div>
+      <div class="grid auto" style="gap:10px">
+        <div style="background:rgba(47,191,113,.06);border:1px solid rgba(47,191,113,.22);border-radius:10px;padding:14px">
+          <div style="font-size:10.5px;letter-spacing:.08em;color:var(--c2)">主通道</div>
+          <div class="num" style="font-size:26px;font-weight:800;line-height:1.3">169 <span style="font-size:12px;color:var(--muted);font-weight:500">次</span></div>
+          <div style="font-size:13px;color:#e8eefb;font-weight:600">AT-SPI / dogtail</div>
+          <div style="font-size:12px;color:#a9b8cf;margin-top:4px">结构化、可按名寻址、状态可读；widget 层另有 95 处按属性查找</div>
+        </div>
+        <div style="background:rgba(242,163,58,.06);border:1px solid rgba(242,163,58,.22);border-radius:10px;padding:14px">
+          <div style="font-size:10.5px;letter-spacing:.08em;color:var(--c3)">几何补洞</div>
+          <div class="num" style="font-size:26px;font-weight:800;line-height:1.3">46 <span style="font-size:12px;color:var(--muted);font-weight:500">个用例文件</span></div>
+          <div style="font-size:13px;color:#e8eefb;font-weight:600">xdotool 坐标点击</div>
+          <div style="font-size:12px;color:#a9b8cf;margin-top:4px">QTableView 复选框由 delegate 绘制、自定义按钮 <code>Press</code> 不触发、V20 <code>:95</code> 指针注入限制</div>
+        </div>
+        <div style="background:rgba(143,162,189,.06);border:1px solid rgba(143,162,189,.22);border-radius:10px;padding:14px">
+          <div style="font-size:10.5px;letter-spacing:.08em;color:var(--muted)">固定几何</div>
+          <div class="num" style="font-size:26px;font-weight:800;line-height:1.3">3 <span style="font-size:12px;color:var(--muted);font-weight:500">处</span></div>
+          <div style="font-size:13px;color:#e8eefb;font-weight:600">ui.ini + ButtonCenter</div>
+          <div style="font-size:12px;color:#a9b8cf;margin-top:4px">参考系 + <code>x,y,w,h</code>，动态列表、滚动、弹窗位置一漂就失效</div>
+        </div>
+        <div style="background:rgba(56,201,214,.06);border:1px solid rgba(56,201,214,.22);border-radius:10px;padding:14px">
+          <div style="font-size:10.5px;letter-spacing:.08em;color:var(--c6)">取证</div>
+          <div class="num" style="font-size:26px;font-weight:800;line-height:1.3">14 <span style="font-size:12px;color:var(--muted);font-weight:500">个用例文件</span></div>
+          <div style="font-size:13px;color:#e8eefb;font-weight:600">产品 D-Bus</div>
+          <div style="font-size:12px;color:#a9b8cf;margin-top:4px">系统 12 + 会话 13 个方法；用于单项结论取证与 <code>Fix</code> 类操作回退</div>
+        </div>
+        <div style="background:rgba(239,91,91,.06);border:1px solid rgba(239,91,91,.22);border-radius:10px;padding:14px">
+          <div style="font-size:10.5px;letter-spacing:.08em;color:var(--c4)">未采用</div>
+          <div class="num" style="font-size:26px;font-weight:800;line-height:1.3">0 <span style="font-size:12px;color:var(--muted);font-weight:500">个用例</span></div>
+          <div style="font-size:13px;color:#e8eefb;font-weight:600">图像识别 / OCR</div>
+          <div style="font-size:12px;color:#a9b8cf;margin-top:4px">主题、DPI、毛玻璃、字体都会漂；只能证明“画面对”，读不到控件状态与层级</div>
+        </div>
+      </div>
+      <p style="margin:14px 0 0;color:#a9b8cf;font-size:13px">
+        AT-SPI 是操作通道，不是事实来源：点击成功只证明“点到了”，行为是否发生要由产品日志、D-Bus 与系统状态判定。
+      </p>
+    </div>
+
+    <div class="grid g3" style="margin-top:14px">
+      <div class="card reveal">
+        <h3 style="margin:0 0 10px;font-size:15px">A 类新增：让失败可定位</h3>
+        <ul class="plist">
+          <li><code>_lookup_caller</code>：记录调用点 <code>文件:行:函数</code>，未命中直接跳到出问题的用例行</li>
+          <li><code>_lookup_log</code>：单行四态日志——直接命中 / 真实未命中 / 候选命中 / 候选未命中，附 <code>expr</code>、<code>name/role/size</code>、耗时</li>
+          <li><code>_lookup_tree_diag</code>：未命中时扫树，报告目标 name 是否存在、匿名控件数量与角色分布、文本采样、<code>difflib</code> 近似名</li>
+          <li><code>log_lookup_summary</code>：按表达式与用例两个维度汇总未命中</li>
+          <li><code>probe</code>：区分回退探测与真实未命中，V20/V25 双写不再污染失败归因</li>
+        </ul>
+      </div>
+      <div class="card reveal">
+        <h3 style="margin:0 0 10px;font-size:15px">B 类删除：向 V20/V25 现实对齐</h3>
+        <ul class="plist">
+          <li>无 <code>require_visible</code> / <code>active_frame_only</code> 默认过滤：QML <code>showing</code> 恒 False，过滤会全部假阴性；可见性改由断言层 <code>size != (0,0)</code> 判断</li>
+          <li>无 <code>find_element_by_accessible_id</code>：定位统一走 name 层级，减少多帧环境的不确定性</li>
+          <li>无 GI 遍历判定活动帧（<code>_active_frame_extents</code> / <code>_gi_find_descendants</code>）：回到 dogtail 朴素递归</li>
+          <li>无 <code>config.actionDelay</code> 等启动参数</li>
+        </ul>
+      </div>
+      <div class="card reveal">
+        <h3 style="margin:0 0 10px;font-size:15px">收益与代价</h3>
+        <div class="stack" style="height:18px">
+          <i style="--w:43.8%;background:var(--c2)"></i>
+          <i style="--w:56.2%;background:var(--c4)"></i>
+        </div>
+        <div class="legend" style="margin-top:10px">
+          <span><i style="background:var(--c2)"></i>新增 222 行：诊断</span>
+          <span><i style="background:var(--c4)"></i>删除 285 行：精简</span>
+        </div>
+        <ul class="plist" style="margin-top:8px">
+          <li>收益：一行日志定位“元素名写错 / 页面没到 / 匿名控件 / 近似名”，63 条用例批量验证</li>
+          <li>收益：未命中统计可按表达式与用例汇总，直接进入过检报告</li>
+          <li>代价：与上游漂移，框架升级时约 500 行差异需手工 rebase；只暴露 <code>accessibleId()</code> 的控件无法定位</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 模型 ============ -->
+  <section id="models">
+    <div class="sec-head reveal">
+      <div class="idx">05 / MODELS</div>
+      <h2>模型分工：主力是 flash，不是最贵的推理模型</h2>
+      <p>按每条 assistant 消息的 <code>model</code> / <code>usage</code> 字段聚合（三套会话合并，共 36,606 次请求）。条形长度 = 总请求数；内部分段 = 承担的工作线。</p>
+    </div>
+
+    <div class="card reveal">
+      <div class="mrow">
+        <div class="name"><code>deepseek-v4.1-flash-1017</code><small>uniontech-ai · 过检绝对主力</small></div>
+        <div class="track"><div class="bar" style="--w:100%">
+          <i style="width:79.5%;background:var(--c1)" title="交互含子代理 14,549"></i>
+          <i style="width:20.5%;background:#7dd3fc" title="无人值守 3,751"></i>
+        </div></div>
+        <div class="mval">18,300<small>缓存读 1,508.1M</small></div>
+      </div>
+
+      <div class="mrow">
+        <div class="name"><code>deepseek-v4-flash</code><small>deepseek · 建设期批量主力</small></div>
+        <div class="track"><div class="bar" style="--w:67.1%">
+          <i style="width:97.2%;background:var(--c5)" title="建设期 11,935"></i>
+          <i style="width:2.8%;background:#c4a6ff" title="过检部署排障 342"></i>
+        </div></div>
+        <div class="mval">12,277<small>输入 529.8M</small></div>
+      </div>
+
+      <div class="mrow">
+        <div class="name"><code>deepseek-flash</code><small>deepseek · 过检早期逐条执行</small></div>
+        <div class="track"><div class="bar" style="--w:27.6%">
+          <i style="width:100%;background:var(--c6)"></i>
+        </div></div>
+        <div class="mval">5,051<small>缓存读 464.9M</small></div>
+      </div>
+
+      <div class="mrow">
+        <div class="name"><code>glm-5.2</code><small>智谱 · 9 月长会话</small></div>
+        <div class="track"><div class="bar" style="--w:4.15%"><i style="width:100%;background:var(--c3)"></i></div></div>
+        <div class="mval">759<small>入口补齐 / V25 验证</small></div>
+      </div>
+
+      <div class="mrow">
+        <div class="name"><code>gpt-5.6-sol</code><small>justdowork-openai · 架构分析</small></div>
+        <div class="track"><div class="bar" style="--w:0.61%"><i style="width:100%;background:var(--c2)"></i></div></div>
+        <div class="mval">112<small>输入 9.0M / 输出 0.015M</small></div>
+      </div>
+
+      <div class="mrow">
+        <div class="name"><code>deepseek-v4.1-flash</code><small>uniontech-ai · 早期部署与报告</small></div>
+        <div class="track"><div class="bar" style="--w:0.57%"><i style="width:100%;background:#8fb4ff"></i></div></div>
+        <div class="mval">105<small>输入 0.28M</small></div>
+      </div>
+
+      <div class="mrow">
+        <div class="name"><code>claude-opus-5</code><small>justdowork-claude · 仅切换记录</small></div>
+        <div class="track"><div class="bar" style="--w:0.02%"><i style="width:100%;background:var(--muted)"></i></div></div>
+        <div class="mval">2<small>无效请求</small></div>
+      </div>
+
+      <div class="legend">
+        <span><i style="background:var(--c1)"></i>过检交互（含 31 子代理）</span>
+        <span><i style="background:#7dd3fc"></i>无人值守</span>
+        <span><i style="background:var(--c5)"></i>建设期批量</span>
+        <span><i style="background:#c4a6ff"></i>过检部署排障</span>
+      </div>
+    </div>
+
+    <div class="grid g3" style="margin-top:14px">
+      <div class="card dcase reveal">
+        <h3>过检交互</h3>
+        <div class="sub">1,740.7M / 1,818.1M</div>
+        <div class="donut-wrap">
+          <svg class="donut" viewBox="0 0 120 120" data-segments="95.7:#5b8def,4.3:#22304a" data-w="13">
+            <circle cx="60" cy="60" r="52" fill="none" stroke="#162134" stroke-width="13"></circle>
+          </svg>
+          <div class="dcenter"><b>95.7%</b><span>缓存读占比</span></div>
+        </div>
+        <div class="dlegend"><span><i style="background:var(--c1)"></i>缓存复用</span><span><i style="background:#22304a"></i>按新输入计费</span></div>
+      </div>
+      <div class="card dcase reveal">
+        <h3>无人值守</h3>
+        <div class="sub">268.5M / 279.1M</div>
+        <div class="donut-wrap">
+          <svg class="donut" viewBox="0 0 120 120" data-segments="96.2:#38c9d6,3.8:#22304a" data-w="13">
+            <circle cx="60" cy="60" r="52" fill="none" stroke="#162134" stroke-width="13"></circle>
+          </svg>
+          <div class="dcenter"><b>96.2%</b><span>缓存读占比</span></div>
+        </div>
+        <div class="dlegend"><span><i style="background:var(--c6)"></i>缓存复用</span><span><i style="background:#22304a"></i>按新输入计费</span></div>
+      </div>
+      <div class="card dcase reveal">
+        <h3>建设期</h3>
+        <div class="sub">36.7M / 573.5M</div>
+        <div class="donut-wrap">
+          <svg class="donut" viewBox="0 0 120 120" data-segments="6.4:#f2a33a,93.6:#22304a" data-w="13">
+            <circle cx="60" cy="60" r="52" fill="none" stroke="#162134" stroke-width="13"></circle>
+          </svg>
+          <div class="dcenter"><b>6.4%</b><span>缓存读占比</span></div>
+        </div>
+        <div class="dlegend"><span><i style="background:var(--c3)"></i>缓存复用</span><span><i style="background:#22304a"></i>461 会话冷启动</span></div>
+      </div>
+    </div>
+
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card reveal">
+        <h3 style="margin:0 0 10px;font-size:15px">四个可复用的观察</h3>
+        <ol style="margin:0;padding-left:20px;font-size:13.2px;color:#b9c8dd;line-height:1.75">
+          <li><b style="color:#e8eefb">任务形态决定模型。</b>短任务海量并行用 <code>deepseek-v4-flash</code>；长会话重工具链用 <code>v4.1-flash-1017</code>；一次读 40k 行源码用 <code>gpt-5.6-sol</code>（9.0M 输入、0.015M 输出）。</li>
+          <li><b style="color:#e8eefb">吞吐与工具调用稳定性 &gt; 单次推理深度。</b>212 个定时会话全部由同一 flash 模型完成，每会话 1 轮。</li>
+          <li><b style="color:#e8eefb">缓存复用率是成本分水岭。</b>交互 95.7%、无人值守 96.2%、建设期 6.4%；三条线合计 76.6%（2.05B / 2.67B）。</li>
+          <li><b style="color:#e8eefb">模型切换有成本。</b>同会话跨模型丢上下文风格；统一主力后，文档与台账格式才稳定。</li>
+        </ol>
+      </div>
+      <div class="card reveal">
+        <h3 style="margin:0 0 10px;font-size:15px">AI 与人的分工</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12.8px">
+          <div style="background:rgba(242,163,58,.07);border:1px solid rgba(242,163,58,.22);border-radius:10px;padding:12px 13px">
+            <div style="color:#ffd9a3;font-weight:700;margin-bottom:5px">人</div>
+            <div style="color:#c6d4e8;line-height:1.7">定验收口径<br>判定产品缺陷<br>决定功能下线<br>授权放宽判据<br>确认版本</div>
+          </div>
+          <div style="background:rgba(47,191,113,.07);border:1px solid rgba(47,191,113,.22);border-radius:10px;padding:12px 13px">
+            <div style="color:#a6ecc8;font-weight:700;margin-bottom:5px">AI</div>
+            <div style="color:#c6d4e8;line-height:1.7">读用例与产品行为<br>构造数据 / 改用例<br>双环境执行取证<br>回退环境 / 写台账</div>
+          </div>
+        </div>
+        <p style="margin:12px 0 0;font-size:12.5px;color:var(--muted)">AI 不直接决定"通过"；框架/脚本负责串行锁、超时、解析、残留检查与报告裁剪。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 结果 ============ -->
+  <section id="results">
+    <div class="sec-head reveal">
+      <div class="idx">06 / RESULTS</div>
+      <h2>三份报告，三种口径</h2>
+      <p>过检看“逐条是否闭环”，V25 全量看“整机基线”，V20 终态看“修复后回归”。失败必须分类，否则失败率只是噪声。</p>
+    </div>
+
+    <div class="donuts">
+      <div class="card dcase reveal">
+        <h3>V20 单用例过检</h3>
+        <div class="sub">229 条 · 2026-11-12 定稿</div>
+        <div class="donut-wrap">
+          <svg class="donut" viewBox="0 0 120 120" data-segments="213:#2fbf71,15:#ef5b5b,1:#8b9bb4" data-w="14" data-r="48">
+            <circle cx="60" cy="60" r="48" fill="none" stroke="#162134" stroke-width="14"></circle>
+          </svg>
+          <div class="dcenter"><b>93.0%</b><span>通过率</span></div>
+        </div>
+        <div class="dlegend">
+          <span><i style="background:var(--c2)"></i>213 通过</span>
+          <span><i style="background:var(--c4)"></i>15 失败</span>
+          <span><i style="background:var(--skip)"></i>1 废弃</span>
+        </div>
+      </div>
+
+      <div class="card dcase reveal">
+        <h3>V25 全量</h3>
+        <div class="sub">执行 361 条 · 8.5 小时串行</div>
+        <div class="donut-wrap">
+          <svg class="donut" viewBox="0 0 120 120" data-segments="224:#2fbf71,95:#ef5b5b,42:#8b9bb4" data-w="14" data-r="48">
+            <circle cx="60" cy="60" r="48" fill="none" stroke="#162134" stroke-width="14"></circle>
+          </svg>
+          <div class="dcenter"><b>62.0%</b><span>通过率</span></div>
+        </div>
+        <div class="dlegend">
+          <span><i style="background:var(--c2)"></i>224 通过</span>
+          <span><i style="background:var(--c4)"></i>95 失败</span>
+          <span><i style="background:var(--skip)"></i>42 跳过</span>
+        </div>
+      </div>
+
+      <div class="card dcase reveal">
+        <h3>V20 全量终态</h3>
+        <div class="sub">346 条 · 2026-11-18（11-17 为 315 / 21 / 1 / 9）</div>
+        <div class="donut-wrap">
+          <svg class="donut" viewBox="0 0 120 120" data-segments="330:#2fbf71,3:#ef5b5b,2:#f2a33a,11:#8b9bb4" data-w="14" data-r="48">
+            <circle cx="60" cy="60" r="48" fill="none" stroke="#162134" stroke-width="14"></circle>
+          </svg>
+          <div class="dcenter"><b>95.4%</b><span>通过率</span></div>
+        </div>
+        <div class="dlegend">
+          <span><i style="background:var(--c2)"></i>330 通过</span>
+          <span><i style="background:var(--c4)"></i>3 失败</span>
+          <span><i style="background:var(--c3)"></i>2 broken</span>
+          <span><i style="background:var(--skip)"></i>11 跳过</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card reveal" style="margin-top:14px">
+      <h3 style="margin:0 0 10px;font-size:15px">11-17 → 11-18：21 条失败收敛到 5 条残余</h3>
+      <div class="grid g4" style="gap:10px">
+        <div style="background:rgba(47,191,113,.07);border:1px solid var(--border);border-radius:10px;padding:12px">
+          <div class="num" style="font-size:24px;font-weight:800;color:var(--c2)">16</div>
+          <div style="font-size:12.5px;color:#c6d4e8">fail → pass</div>
+          <div style="font-size:11.5px;color:var(--muted)">修复后复跑转绿</div>
+        </div>
+        <div style="background:rgba(143,162,189,.07);border:1px solid var(--border);border-radius:10px;padding:12px">
+          <div class="num" style="font-size:24px;font-weight:800;color:var(--muted)">2</div>
+          <div style="font-size:12.5px;color:#c6d4e8">fail → skip</div>
+          <div style="font-size:11.5px;color:var(--muted)">107 / 110 改判“公网不可达属前置不满足”</div>
+        </div>
+        <div style="background:rgba(239,91,91,.07);border:1px solid var(--border);border-radius:10px;padding:12px">
+          <div class="num" style="font-size:24px;font-weight:800;color:var(--c4)">1</div>
+          <div style="font-size:12.5px;color:#c6d4e8">pass → fail</div>
+          <div style="font-size:11.5px;color:var(--muted)">371：新增构造时序回归</div>
+        </div>
+        <div style="background:rgba(242,163,58,.07);border:1px solid var(--border);border-radius:10px;padding:12px">
+          <div class="num" style="font-size:24px;font-weight:800;color:var(--c3)">5</div>
+          <div style="font-size:12.5px;color:#c6d4e8">残余：2 产品 + 3 脚本</div>
+          <div style="font-size:11.5px;color:var(--muted)">另 4 条仍 fail、7 条重跑中仅 1 条转通过</div>
+        </div>
+      </div>
+      <p style="margin:12px 0 0;font-size:12.8px;color:#a9b8cf">
+        145 / 146 为依赖修复插件未检查 <code>apt install -fy</code> 返回码（同一根因，产品缺陷）；371 断言时扫描任务已是 <code>success:ok</code>（构造时序）；
+        055 <code>sleep</code> 未导入、319 调用 widget 不存在的 <code>set_unreachable_repo</code>（脚本缺陷）。
+      </p>
+    </div>
+
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card reveal">
+        <h3 style="margin:0 0 12px;font-size:15px">V20 过检 15 条失败：分类决定动作</h3>
+        <div class="stack" style="height:18px">
+          <i style="--w:60%;background:var(--c4)"></i>
+          <i style="--w:13.3%;background:var(--c3)"></i>
+          <i style="--w:20%;background:var(--c5)"></i>
+          <i style="--w:6.7%;background:var(--c6)"></i>
+        </div>
+        <div class="legend">
+          <span><i style="background:var(--c4)"></i>产品缺陷 9</span>
+          <span><i style="background:var(--c3)"></i>功能下线 2</span>
+          <span><i style="background:var(--c5)"></i>判据与设计不符 3</span>
+          <span><i style="background:var(--c6)"></i>待复验 1</span>
+        </div>
+        <p style="margin:14px 0 0;font-size:12.8px;color:#a9b8cf">
+          混在一起会误导：产品缺陷记 <code>fail</code> + 根因 + 证据；功能下线由需求方决策；判据不符改用例预期，不改产品实现。
+        </p>
+      </div>
+
+      <div class="card reveal">
+        <h3 style="margin:0 0 12px;font-size:15px">V25 95 条失败：先修工程问题，再提缺陷</h3>
+        <div class="cov" style="row-gap:10px">
+          <div class="cl">清理类</div><div class="cv">31</div>
+          <div class="cbar" style="--cc:var(--c4)"><i style="--w:32.6%"></i></div>
+          <div class="cl">其他</div><div class="cv">23</div>
+          <div class="cbar" style="--cc:var(--c3)"><i style="--w:24.2%"></i></div>
+          <div class="cl">第三方应用修复</div><div class="cv">10</div>
+          <div class="cbar" style="--cc:var(--c5)"><i style="--w:10.5%"></i></div>
+          <div class="cl">系统检测 / 更新</div><div class="cv">8</div>
+          <div class="cbar" style="--cc:var(--c1)"><i style="--w:8.4%"></i></div>
+          <div class="cl">音频</div><div class="cv">8</div>
+          <div class="cbar" style="--cc:var(--c1)"><i style="--w:8.4%"></i></div>
+          <div class="cl">打印机 / 权限</div><div class="cv">6</div>
+          <div class="cbar" style="--cc:var(--c6)"><i style="--w:6.3%"></i></div>
+          <div class="cl">外设 USB</div><div class="cv">5</div>
+          <div class="cbar" style="--cc:var(--c6)"><i style="--w:5.3%"></i></div>
+          <div class="cl">网络 / 仓库</div><div class="cv">4</div>
+          <div class="cbar" style="--cc:var(--c2)"><i style="--w:4.2%"></i></div>
+        </div>
+        <p style="margin:12px 0 0;font-size:12.8px;color:#a9b8cf">
+          条形长度为占 95 条失败的比例。17 条"旧通过 → 新失败"用稳定性 / 会话变量 / 启动方式 / AT-SPI 残留 / daemon 状态 5 组对照，排除代码原因，定位为测试机重置后的干净基线差异。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 人机边界 ============ -->
+  <section id="human">
+    <div class="sec-head reveal">
+      <div class="idx">07 / HUMAN IN THE LOOP</div>
+      <h2>点名不等于工程量：84 条点名触发了 212 个文件</h2>
+      <p>口径：11-17 全量 345 条明细 × 11-16 前 25 个顶层交互会话的用户提示词。A = 明确给判据/期望/构造；B = 只点名修复；C = 未点名。</p>
+    </div>
+
+    <div class="card reveal">
+      <div style="display:grid;grid-template-columns:110px 1fr;gap:10px 14px;align-items:center">
+        <div style="font-size:13px">A 明确界定<small style="display:block;color:var(--muted);font-size:11.5px">30 条</small></div>
+        <div class="stack">
+          <i style="--w:9.2%;background:var(--c2)"></i><i style="--w:1.9%;background:var(--c4)"></i><i style="--w:0.4%;background:var(--skip)"></i>
+        </div>
+        <div style="font-size:13px">B 只点名<small style="display:block;color:var(--muted);font-size:11.5px">54 条</small></div>
+        <div class="stack">
+          <i style="--w:18.4%;background:var(--c2)"></i><i style="--w:1.9%;background:var(--c4)"></i><i style="--w:0.4%;background:var(--skip)"></i>
+        </div>
+        <div style="font-size:13px">C 未点名<small style="display:block;color:var(--muted);font-size:11.5px">261 条</small></div>
+        <div class="stack">
+          <i style="--w:92.7%;background:var(--c2)"></i><i style="--w:4.6%;background:var(--c4)"></i><i style="--w:2.7%;background:var(--skip)"></i>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--c2)"></i>通过 A 24 / B 48 / C 242</span>
+        <span><i style="background:var(--c4)"></i>失败 5 / 5 / 12</span>
+        <span><i style="background:var(--skip)"></i>跳过 1 / 1 / 7</span>
+      </div>
+      <p style="margin:12px 0 0;font-size:12.5px;color:var(--muted)">条形长度按组规模（C 组 261 条归一化为 100%），内部分段为最终状态。</p>
+      <p style="margin:6px 0 0;font-size:12.5px;color:var(--muted)">11-18 终态同口径为 329 通过 / 5 失败 / 11 跳过（allure 346 方法另含 2 broken 与 061 通过）；差分：通过 +15、失败 −17、跳过 +2，15 = 17 − 2。</p>
+    </div>
+
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card reveal">
+        <h3 style="margin:0 0 12px;font-size:15px">点名修复的批量外溢</h3>
+        <div class="funnel">
+          <div class="fcell"><b class="num" data-count="84">0</b><span>人工直接点名</span><span class="farrow">→</span></div>
+          <div class="fcell"><b class="num" data-count="212">0</b><span>实际编辑用例文件</span><span class="farrow">→</span></div>
+          <div class="fcell"><b class="num" data-count="177">0</b><span>点名单以外净波及</span></div>
+        </div>
+        <div style="font-size:12.8px;color:#a9b8cf;margin-top:12px">
+          点名用例自身被编辑 35 条；另有 14 个公共层文件（<code>my_app_widget.py</code>、<code>conftest.py</code>、<code>dogtail_utils.py</code> 等）。
+          按改动面积算约为点名数的 <b style="color:#e8eefb">2.5 倍</b>，212 是下限。
+        </div>
+        <p style="margin:10px 0 0;font-size:12.5px;color:var(--muted)">
+          反向证据：A 组 30 条点名中仍有 6 条失败/跳过——"人给了边界"不等于"实现必然通过"。
+        </p>
+      </div>
+
+      <div class="card reveal">
+        <h3 style="margin:0 0 10px;font-size:15px">C 组 242 条通过是怎么来的</h3>
+        <div class="cov" style="row-gap:10px">
+          <div class="cl">过检期 AI 自行改实现后通过</div><div class="cv">125</div>
+          <div class="cbar" style="--cc:var(--c2)"><i style="--w:51.7%"></i></div>
+          <div class="cl">未改代码直接通过</div><div class="cv">63</div>
+          <div class="cbar" style="--cc:var(--c6)"><i style="--w:26.0%"></i></div>
+          <div class="cl">不在 V20 229 条台账内直接通过</div><div class="cv">54</div>
+          <div class="cbar" style="--cc:var(--c1)"><i style="--w:22.3%"></i></div>
+        </div>
+        <p style="margin:14px 0 0;font-size:12.8px;color:#a9b8cf">
+          条形长度为占 242 条通过的比例。明确界定后修正通过 20 条，占全量 <b style="color:#e8eefb">5.8%</b>；AI 在无人点名边界下最终通过 <b style="color:#e8eefb">242 条，占 70.1%</b>。
+          这两个数字合起来才是人机分工的真实形状：人给关键判定，AI 承担长尾修复。
+        </p>
+      </div>
+    </div>
+
+    <div class="card reveal" style="margin-top:14px">
+      <h3 style="margin:0 0 12px;font-size:15px">20 条"明确界定"的类型分布</h3>
+      <div class="grid g4" style="gap:10px">
+        <div style="background:rgba(91,141,239,.07);border:1px solid var(--border);border-radius:10px;padding:12px">
+          <div class="num" style="font-size:22px;font-weight:800">5</div>
+          <div style="font-size:12.5px;color:#c6d4e8">截图给出应显示内容</div>
+          <div style="font-size:11.5px;color:var(--muted)">期望文案 / 页面态</div>
+        </div>
+        <div style="background:rgba(47,191,113,.07);border:1px solid var(--border);border-radius:10px;padding:12px">
+          <div class="num" style="font-size:22px;font-weight:800">4</div>
+          <div style="font-size:12.5px;color:#c6d4e8">放宽或修正判据</div>
+          <div style="font-size:11.5px;color:var(--muted)">授权后才改，且留痕</div>
+        </div>
+        <div style="background:rgba(242,163,58,.07);border:1px solid var(--border);border-radius:10px;padding:12px">
+          <div class="num" style="font-size:22px;font-weight:800">3</div>
+          <div style="font-size:12.5px;color:#c6d4e8">明确应执行 X 检测</div>
+          <div style="font-size:11.5px;color:var(--muted)">补行为断言</div>
+        </div>
+        <div style="background:rgba(169,123,240,.07);border:1px solid var(--border);border-radius:10px;padding:12px">
+          <div class="num" style="font-size:22px;font-weight:800">3</div>
+          <div style="font-size:12.5px;color:#c6d4e8">明确前置需构造的场景</div>
+          <div style="font-size:11.5px;color:var(--muted)">构造 + 回退</div>
+        </div>
+        <div style="background:rgba(56,201,214,.07);border:1px solid var(--border);border-radius:10px;padding:12px">
+          <div class="num" style="font-size:22px;font-weight:800">2</div>
+          <div style="font-size:12.5px;color:#c6d4e8">明确启动方式</div>
+          <div style="font-size:11.5px;color:var(--muted)">--page / 入口</div>
+        </div>
+        <div style="background:rgba(56,201,214,.07);border:1px solid var(--border);border-radius:10px;padding:12px">
+          <div class="num" style="font-size:22px;font-weight:800">2</div>
+          <div style="font-size:12.5px;color:#c6d4e8">明确期望行为</div>
+          <div style="font-size:11.5px;color:var(--muted)">免鉴权修复等</div>
+        </div>
+        <div style="background:rgba(239,91,91,.07);border:1px solid var(--border);border-radius:10px;padding:12px">
+          <div class="num" style="font-size:22px;font-weight:800">1</div>
+          <div style="font-size:12.5px;color:#c6d4e8">纠正用例与需求映射</div>
+          <div style="font-size:11.5px;color:var(--muted)">编号 / 需求对齐</div>
+        </div>
+        <div style="background:rgba(143,162,189,.07);border:1px solid var(--border);border-radius:10px;padding:12px">
+          <div class="num" style="font-size:22px;font-weight:800">—</div>
+          <div style="font-size:12.5px;color:#c6d4e8">合计 20 条</div>
+          <div style="font-size:11.5px;color:var(--muted)">严格判据型</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 覆盖 ============ -->
+  <section id="coverage">
+    <div class="sec-head reveal">
+      <div class="idx">08 / COVERAGE</div>
+      <h2>覆盖分析：主干扎实，缺口在修复工具长尾</h2>
+      <p>功能/接口级覆盖，不是代码行覆盖率（产品未接 gcov/lcov）。被测源码取 <code>develop/refactor</code> 分支；用例侧取 345 个可执行模块。判定：A 主路径 + 异常，B 主路径，C 仅入口，D 无用例。</p>
+    </div>
+
+    <div class="grid g2">
+      <div class="card reveal">
+        <h3 style="margin:0 0 14px;font-size:15px">覆盖总览</h3>
+        <div class="cov">
+          <div class="cl">插件总数 <small>35</small></div><div class="cv">25 / 35 · 71.4%</div>
+          <div class="cbar" style="--cc:var(--c1)"><i style="--w:71.4%"></i></div>
+
+          <div class="cl">检测类插件 <small>5</small></div><div class="cv">5 / 5 · 100%</div>
+          <div class="cbar" style="--cc:var(--c2)"><i style="--w:100%"></i></div>
+
+          <div class="cl">优化类插件 <small>5</small></div><div class="cv">4 / 5 · 80%</div>
+          <div class="cbar" style="--cc:var(--c2)"><i style="--w:80%"></i></div>
+
+          <div class="cl">工具类插件 <small>4</small></div><div class="cv">4 / 4 · 100%</div>
+          <div class="cbar" style="--cc:var(--c2)"><i style="--w:100%"></i></div>
+
+          <div class="cl">修复类插件 <small>21</small></div><div class="cv">12 / 21 · 57.1%</div>
+          <div class="cbar" style="--cc:var(--c4)"><i style="--w:57.1%"></i></div>
+
+          <div class="cl">检测项 ID <small>24</small></div><div class="cv">21 / 24 · 87.5%</div>
+          <div class="cbar" style="--cc:var(--c3)"><i style="--w:87.5%"></i></div>
+
+          <div class="cl">主页面 + 设置对话框 <small>5</small></div><div class="cv">5 / 5 · 100%</div>
+          <div class="cbar" style="--cc:var(--c2)"><i style="--w:100%"></i></div>
+        </div>
+        <p style="margin:14px 0 0;font-size:12.6px;color:var(--muted)">
+          强覆盖：体检 5 卡（~108 条 A 级）、空间/大文件/重复文件（~56 条 A 级）、外设与应用修复（58 条 A 级）、修复页框架（13 条）、工具页（17 条）。
+        </p>
+      </div>
+
+      <div class="card reveal">
+        <h3 style="margin:0 0 10px;font-size:15px">缺口与补测优先级</h3>
+        <div style="font-size:13px;color:#c6d4e8;line-height:1.8">
+          <div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px dashed var(--border)">
+            <span class="next" style="border:none;padding:0;color:var(--c4);font-weight:700;flex:0 0 28px">P1</span>
+            <span>启动项管理逐项启停/筛选；<code>cache-clean</code>、<code>system-update</code>、<code>app-store</code>、<code>launcher-fix</code>、<code>taskbar-fix</code> 五个修复工具；大文件/重复文件"打开文件所在位置"</span>
+          </div>
+          <div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px dashed var(--border)">
+            <span class="next" style="border:none;padding:0;color:var(--c3);font-weight:700;flex:0 0 28px">P2</span>
+            <span><code>coredump</code>、<code>service_restarts</code> 检测项；<code>immutable-disk-usage</code>（V25 旭日图）；<code>app-crash</code>、<code>app-font</code>、<code>app-startup</code>、<code>icon-display</code></span>
+          </div>
+          <div style="display:flex;gap:10px;padding:9px 0">
+            <span class="next" style="border:none;padding:0;color:var(--c6);font-weight:700;flex:0 0 28px">P3</span>
+            <span><code>ResultCode</code> 错误码断言、<code>SetAllowCaller</code>/<code>Cancel*</code> 接口边界、埋点 TID、离线插件导入与插件 ABI、设置页旧配置迁移</span>
+          </div>
+        </div>
+        <div style="margin-top:14px;padding:12px 13px;border-radius:10px;background:rgba(239,91,91,.07);border:1px solid rgba(239,91,91,.22);font-size:12.6px;color:#ffc4c4">
+          9 个修复工具零用例：<code>app-crash</code> / <code>app-font</code> / <code>app-startup</code> / <code>app-store</code> /
+          <code>cache-clean</code> / <code>system-update</code> / <code>icon-display</code> / <code>launcher-fix</code> / <code>taskbar-fix</code>
+        </div>
+        <div style="margin-top:10px;padding:12px 13px;border-radius:10px;background:rgba(56,201,214,.06);border:1px solid rgba(56,201,214,.22);font-size:12.6px;color:#b7e9ef">
+          接口面：直接 D-Bus 只覆盖 <code>Detect</code>、<code>Fix</code>、<code>Task.GetResult</code>、<code>Task.GetStatus</code> 4 个；鉴权覆盖较好（免鉴权 / 需鉴权 / 超时 4 条）。
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 12 条经验 ============ -->
+  <section id="lessons">
+    <div class="sec-head reveal">
+      <div class="idx">09 / LESSONS</div>
+      <h2>12 条可复用的解决经验</h2>
+      <p>每条都来自有日志、复跑结果或行为观察支撑的现场结论，可直接迁移到其他桌面应用自动化工程。</p>
+    </div>
+
+    <div class="exp">
+      <div class="expc reveal" style="--accent:var(--c1)">
+        <div class="n">01</div><h4>能力探测优于版本判断</h4>
+        <p>pip、polkit、overlay、显示协议全部探测，不写 V20/V25 两套 if/else；版本号只用于报告标注。没机器验证的分支腐烂最快。</p>
+      </div>
+      <div class="expc reveal" style="--accent:var(--c4)">
+        <div class="n">02</div><h4>构建失败不静默回退</h4>
+        <p>静默回退会制造"测试通过但测的是旧版本"的假象。部署后必须校验版本与源码一致，失败直接报错。</p>
+      </div>
+      <div class="expc reveal" style="--accent:var(--c2)">
+        <div class="n">03</div><h4>PASS 不是证据</h4>
+        <p>以产品日志、D-Bus、系统状态为准；UI 只能证明"点到了"。AT-SPI 是操作通道，不是事实来源。</p>
+      </div>
+      <div class="expc reveal" style="--accent:var(--c3)">
+        <div class="n">04</div><h4>有界重试 + 提前退出</h4>
+        <p>所有等待都要有超时、退出条件和现场信息。"看到就点 + 提前退出"，禁止用 <code>continue</code> 表达"再等等"。</p>
+      </div>
+      <div class="expc reveal" style="--accent:var(--c5)">
+        <div class="n">05</div><h4>四段闭环</h4>
+        <p>构造 → 执行 → 断言 → 回退。<code>finally</code> 是硬约束；备份永不覆盖，发现遗留非空备份先恢复再重新备份。</p>
+      </div>
+      <div class="expc reveal" style="--accent:var(--c6)">
+        <div class="n">06</div><h4>负面状态自己构造</h4>
+        <p>要求"缺失/异常"的用例自己造并回退，不依赖机器现状；"要求存在"的用依赖预检补齐，同一台机器两个方向各自自洽。</p>
+      </div>
+      <div class="expc reveal" style="--accent:var(--c1)">
+        <div class="n">07</div><h4>单一事实源</h4>
+        <p>用例编号、优先级、期望以 PMS/登记表为准；csv、方法名、文件名三方校验，改完必须全量 <code>--collect-only</code> 验证唯一。</p>
+      </div>
+      <div class="expc reveal" style="--accent:var(--c2)">
+        <div class="n">08</div><h4>单入口串行</h4>
+        <p>一把锁、一个入口、一条用例。并发是脏环境和误判的源头：拿不到锁直接 <code>BUSY</code>/<code>SKIPPED</code>，不抢跑。</p>
+      </div>
+      <div class="expc reveal" style="--accent:var(--c3)">
+        <div class="n">09</div><h4>证据链即交付物</h4>
+        <p>台账、日志、复跑次数缺一不可；否则无法区分"用例错"和"产品错"。失败必须带根因与现场。</p>
+      </div>
+      <div class="expc reveal" style="--accent:var(--c5)">
+        <div class="n">10</div><h4>文档是 AI 的接口</h4>
+        <p>写给下一位接手者（人或 AI）的实测笔记，比任何 prompt 都值钱：只写"已实测 / 未验证"，结论即时落盘。</p>
+      </div>
+      <div class="expc reveal" style="--accent:var(--c4)">
+        <div class="n">11</div><h4>环境故障与用例失败分账</h4>
+        <p>SYNC/SSH/凭据失败记 <code>blocked</code>，不写 <code>fail</code>；失败率分母只算真正执行过的条目，否则缺陷被噪声淹没。</p>
+      </div>
+      <div class="expc reveal" style="--accent:var(--c6)">
+        <div class="n">12</div><h4>调度器也是被测对象</h4>
+        <p>busy 比例、空转会话、reclaim 冲突、重复记录都要度量并优化；无人值守的吞吐由最弱的那个环节决定。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 踩坑 ============ -->
+  <section id="pits">
+    <div class="sec-head reveal">
+      <div class="idx">10 / PITFALLS</div>
+      <h2>踩过的坑：每一条都有现场证据</h2>
+      <p>只列根因明确、有日志或复跑结果支撑的条目。真正的瓶颈往往不是模型能力，而是信息、环境与调度。</p>
+    </div>
+
+    <div class="pit">
+      <div class="card reveal">
+        <h4>建设期：信息门禁</h4>
+        <div class="who">并行 Agent 的瓶颈是"信息是否足够开工"</div>
+        <ul class="plist">
+          <li><span class="bad">385 / 466 个会话出现版本歧义，77 个被置 blocked</span>
+            <span class="fix">清单补 V20/V25 字段；批量任务开工前统一确认一次，别让 N 个 Agent 问 N 遍</span></li>
+          <li><span class="bad">早期文件名 <code>test_mycase_0XX.py</code> 与 PMS ID 无映射，<code>-k</code> 选错对象</span>
+            <span class="fix">迁移为 <code>PMS用例ID_用例标题.py</code>；csv / 方法名 / 文件名三方一致性校验</span></li>
+          <li><span class="bad">461 个会话同日共享工作区、缓存与测试机</span>
+            <span class="fix">每个任务独立 immutable 工作区；提交走评审；测试机侧加锁排队</span></li>
+        </ul>
+      </div>
+
+      <div class="card reveal">
+        <h4>真机取证：AT-SPI 的能力边界</h4>
+        <div class="who">点击成功 ≠ 行为发生</div>
+        <ul class="plist">
+          <li><span class="bad">QML 节点 <code>showing</code> 恒为 False，用例 PASS 但实际没执行检测</span>
+            <span class="fix">可见性改用 <code>size != (0,0)</code>；点击后必须看到运行态/结果态</span></li>
+          <li><span class="bad">V20 QML 不向 AT-SPI 暴露单项文本与状态</span>
+            <span class="fix">走产品 D-Bus：会话总线不认识时回退系统总线；都不实现才退回分项级断言</span></li>
+          <li><span class="bad">修复完成弹窗永不消失，<code>exec()</code> 阻塞到 400–500s</span>
+            <span class="fix">每轮看到弹窗就点；命中关键字或窗口不可见即返回；统一收尾兜底</span></li>
+          <li><span class="bad">弹窗正文读不到（DTK 标签 name 是对象名）</span>
+            <span class="fix">断言"弹框存在 + 标题 + 按钮文案"；正文从会话总线请求参数取</span></li>
+        </ul>
+      </div>
+
+      <div class="card reveal">
+        <h4>部署：环境前提要编码进脚本</h4>
+        <div class="who">桌面自动化的失败大多不是用例错，而是环境差</div>
+        <ul class="plist">
+          <li><span class="bad">Qt5/DTK5 依赖冲突，最终装成仓库旧版仍显示"成功"</span>
+            <span class="fix">只降元包、开发包解包到 <code>/usr</code> 不注册 dpkg；构建后校验版本；失败不静默回退</span></li>
+          <li><span class="bad">测试机混入另一版本源，装包连带升级 SSH 失联</span>
+            <span class="fix">按系统版本写源、隔离不匹配源、备份独立目录、部署期间保持生效</span></li>
+          <li><span class="bad">V25 PEP 668 / <code>pkg_resources</code> 消失 / pipenv 装不上</span>
+            <span class="fix">能力探测：pip≥23 加 <code>--break-system-packages</code>，固定 <code>setuptools&lt;81</code>，剔除 apt 同名包</span></li>
+          <li><span class="bad">V25 检测项 D-Bus <code>AccessDenied</code></span>
+            <span class="fix">polkit 双后端（pkla / rules_js）+ <code>pkcheck</code> 自检；预授权放在产品安装后</span></li>
+          <li><span class="bad">39 个同名 <code>.so</code> 写进系统 site-packages，产品误报"关键库依赖问题"</span>
+            <span class="fix">框架依赖只装 <code>.venv</code>；PATH 前置；入口自动 <code>execv</code> 到 venv</span></li>
+        </ul>
+      </div>
+
+      <div class="card reveal">
+        <h4>判定与环境隔离</h4>
+        <div class="who">等价但可证，破坏性用例先隔离真实数据</div>
+        <ul class="plist">
+          <li><span class="bad">清理类用例误删测试机真实数据；备份覆盖造成永久丢失</span>
+            <span class="fix">前置把真实文件移出扫描范围，<code>finally</code> 按原路径恢复；备份永不覆盖</span></li>
+          <li><span class="bad">同一机器两个实例 8s 并发，一个卸载另一个的 tmpfs</span>
+            <span class="fix">跨进程文件锁；拿不到锁直接 <code>SKIPPED</code>；内存构造余量 14% → 10%</span></li>
+          <li><span class="bad">磁盘 96%、<code>/boot</code> 93%，环境越跑越脏</span>
+            <span class="fix">杀残留实例 + 删填充文件；日志/结果保留最近 30 份；磁盘阈值监控介入</span></li>
+          <li><span class="bad">100MB 大文件正好卡在产品"大于 100MB"阈值</span>
+            <span class="fix">阈值类用例显式写边界，用 100 / 101 / 120MB 三档验证</span></li>
+          <li><span class="bad">被 kill 时解析到旧 json，误报 passed</span>
+            <span class="fix">结论以退出码为准；json 时间戳必须晚于本次启动时间</span></li>
+        </ul>
+      </div>
+
+      <div class="card reveal">
+        <h4>无人值守：环境状态机</h4>
+        <div class="who">测试机在线、代码已同步、锁未过期、凭据有效，四者任一不成立产出即噪声</div>
+        <ul class="plist">
+          <li><span class="bad">64 / 212 个会话只领到 <code>busy</code> 就结束（30% 空转）</span>
+            <span class="fix">唤醒后先 <code>status</code>，busy 不建长会话；改为 watch 台账变化或指数退避</span></li>
+          <li><span class="bad">测试机 04:12 失联，21 条仍被写 <code>fail</code>，失败率被放大一倍</span>
+            <span class="fix">台账增加 <code>blocked</code> 终态；SYNC/SSH/凭据失败不写 fail</span></li>
+          <li><span class="bad">两个监控会话同时接管同一条，互相覆盖用例与 widget</span>
+            <span class="fix">reclaim 携带 token 与基线版本；写前比对，冲突保留两版并记录合并人</span></li>
+          <li><span class="bad">编排会话边汇总边想跑用例，工具错误累积</span>
+            <span class="fix">编排只做领取/汇总/决策；执行只由 worker 做</span></li>
+        </ul>
+      </div>
+
+      <div class="card reveal">
+        <h4>AI 协作：信任要设计出来</h4>
+        <div class="who">规程写死"证据优先"，比提醒模型更有效</div>
+        <ul class="plist">
+          <li><span class="bad">把"点了按钮"当"行为发生"；为变绿改判据</span>
+            <span class="fix">人保留验收权；产品缺陷记 fail + 根因 + 证据；放宽判据必须用户明确授权并留痕</span></li>
+          <li><span class="bad">AI 忘记回退，环境越跑越脏</span>
+            <span class="fix">规程强制 <code>finally</code>；残留检查脚本；每轮结束自查清单</span></li>
+          <li><span class="bad">长会话 137 条指令后结论丢失</span>
+            <span class="fix">关键结论即时写进笔记/台账；按"一条用例一次唤醒"控制上下文</span></li>
+          <li><span class="bad">模型误读源码，把"启动时自动检测"当成"用例触发"</span>
+            <span class="fix">源码 + 日志 + 实测三方交叉，结论写清证据位置</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 下一步 ============ -->
+  <section id="next">
+    <div class="sec-head reveal">
+      <div class="idx">11 / NEXT</div>
+      <h2>下一步：先收敛，再复用</h2>
+      <p>优先级按"影响面 × 可验证性"排序；所有数字都应能从台账复算。</p>
+    </div>
+
+    <div class="card reveal">
+      <div class="next"><span class="p p0">P0</span><div>无人值守批次复位：重置 22 条误判（21 条失联 + 2005699 实为功能下线）；加固 SYNC/SSH 失败判定；给 <code>harness.py</code> 增加 <code>blocked</code> 终态与“开工四问”；固定节拍改为 watch 台账，<code>reclaim</code> 加版本号避免监控双写。</div></div>
+      <div class="next"><span class="p p0">P0</span><div>V25 收敛：修复工作树按主题合并；95 条失败先修工程问题（清理样本、mock 进程、跳过原因），再处理产品缺陷。</div></div>
+      <div class="next"><span class="p p1">P1</span><div>建设期经验固化：把“版本 / 环境 / 入口 / 命名”四件套写进任务模板；把 <code>blocked</code> 队列纳入日常巡检，避免批量任务因同一信息缺失成片停摆。</div></div>
+      <div class="next"><span class="p p1">P1</span><div>产品缺陷单：埋点页面 ID 不匹配（3）、安装脚本不检查返回码（2）、<code>pkexec</code> 无 tty（2）、错误分类只匹配英文（1）、插件加载泄漏（1），每条附日志与行为证据。</div></div>
+      <div class="next"><span class="p p1">P1</span><div>工程化：把 <code>.automation/</code> 台账与残留检查抽成模板；<code>conftest.py</code> 输出跳过原因与用例级耗时；P1–P4 与 PMS 编号校验做成 CI 前置检查。</div></div>
+      <div class="next"><span class="p p1">P1</span><div>补测 P1 缺口：启动项逐项启停/筛选、5 个长尾修复工具、"打开文件所在位置"。</div></div>
+      <div class="next"><span class="p">P2</span><div>AI 能力试点：选 10–20 条稳定用例用 <code>youqu at</code> YAML 管道重写，对比维护成本；接入 MCP Server 做"AI 直接取证"，仍以 D-Bus/日志为判定源。</div></div>
+      <div class="next"><span class="p">P2</span><div>安全：轮换框架仓库中曾提交的明文 API Key；把 <code>dist/</code> 移出 git；会话汇总目录已加入 <code>.gitignore</code>，不提交、不外发。</div></div>
+      <div class="next"><span class="p">P2</span><div>建立调度指标：每批次统计 busy 比例、空转数、reclaim 冲突、鉴权失败、单条平均耗时与重跑率；调度器按与用例代码同等标准回归。</div></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <h4>数据口径与来源</h4>
+    <ul>
+      <li><b>建设期会话 466 个</b>：内部 issue 平台导出（2026-09-28 → 10-26）；494 条用户指令、12,694 条助手消息/请求、573,465,265 tokens（输入 530.5M / 输出 6.27M / 缓存读 36.7M）。</li>
+      <li><b>过检期交互会话 64 个</b>：本机 coding agent JSONL（33 顶层 + 31 子代理/分片，2026-09-09 → 11-18）；485 条提示、5,396 条消息、20,161 次请求、1,818,073,153 tokens。</li>
+      <li><b>无人值守 212 个会话</b>：<code>~/.dsh/sessions</code> 中 cwd 命中本项目（2026-11-10 20:32 → 11-11 11:35）；218 轮、3,751 条消息/请求、279,070,101 tokens，模型全部为 <code>deepseek-v4.1-flash-1017</code>。</li>
+      <li><b>合计</b>：742 会话、1,197 条指令、21,841 条助手消息、36,606 次请求、2,670,608,519 tokens（≈26.7 亿）。</li>
+      <li><b>仓库</b>：347 个用例文件 / <code>mycase.csv</code> 347 行 / <code>apps/</code> 68,011 行（357 文件）/ <code>my_app_widget.py</code> 26,226 行；745 非合并 + 473 合并提交（HEAD <code>7a3eae9</code>，2026-11-18 10:02）。</li>
+      <li><b>定位底座</b>：<code>src/depends/dogtail/</code> 与 youqu-ai 版本逐字节一致；<code>src/dogtail_utils.py</code> 相对框架版 +222 / −285 行（净 −63）。通道统计为 2026-11-18 对 347 个用例文件 grep：<code>self.dog.*</code> 169 次、<code>self.ui.</code> 3 处、含 <code>xdotool</code> 46 文件、含 <code>dbus</code> 14 文件、图像/OCR 0。</li>
+      <li><b>V20 过检</b>：229 条 → 213 / 15 / 1（11-12 定稿）；11-16 台账终态 223 / 4 / 1 / 1。</li>
+      <li><b>V25 全量</b>：登记 362、执行 361，8.5 小时串行 → 224 / 95 / 42。</li>
+      <li><b>V20 复跑（11-17）</b>：报告 346 条（315 / 21 / 1 / 9）；明细 345 条（1 条 broken 未入明细）。</li>
+      <li><b>V20 终态（11-18）</b>：346 条（330 / 3 / 2 / 11）；同口径明细 345 条（329 / 5 / 11，allure 另含 2 broken 与 061 通过）。</li>
+      <li><b>人工介入</b>：基于 11-16 前 25 个顶层会话提示词与 345 条明细交叉；点名规则为"出现 6 位 PMS ID 或 <code>test_mycase_XXX</code> + 边界词"。子代理任务派发不计入点名。</li>
+      <li><b>覆盖</b>：被测源码 <code>deepin-pc-manager develop/refactor</code>；功能面来自 35 个插件 <code>config.json</code>、<code>operable_item_ids.h</code>、双守护进程头文件；用例侧 345 个可执行模块。</li>
+    </ul>
+    <div class="note">
+      本页为内部资料整理，不外发。会话明细见三套本机存档：建设期 issue 平台导出、过检期 <code>.omp-sessions/</code>（含子代理/分片）、无人值守 harness 会话目录。
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var NS = "http://www.w3.org/2000/svg";
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function animateCount(el){
+    if (reduce) return;
+    var target = parseFloat(el.dataset.count);
+    var dec = parseInt(el.dataset.decimals || "0", 10);
+    var start = performance.now(), dur = 1200;
+    function fmt(v){
+      return v.toLocaleString("zh-CN", {minimumFractionDigits: dec, maximumFractionDigits: dec});
+    }
+    function tick(t){
+      var p = Math.min(1, (t - start) / dur);
+      var e = 1 - Math.pow(1 - p, 3);
+      el.textContent = fmt(target * e);
+      if (p < 1) requestAnimationFrame(tick);
+      else el.textContent = fmt(target);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function buildDonut(svg){
+    if (svg.dataset.built) return;
+    var segs = (svg.dataset.segments || "").split(",").filter(Boolean).map(function(s){
+      var parts = s.split(":");
+      return {value: parseFloat(parts[0]), color: parts[1]};
+    });
+    var total = segs.reduce(function(a, b){ return a + b.value; }, 0);
+    if (!total) return;
+    var R = parseFloat(svg.dataset.r || "52");
+    var W = parseFloat(svg.dataset.w || "14");
+    var C = 2 * Math.PI * R;
+    var g = document.createElementNS(NS, "g");
+    g.setAttribute("transform", "rotate(-90 60 60)");
+    var acc = 0;
+    segs.forEach(function(seg, i){
+      var c = document.createElementNS(NS, "circle");
+      c.setAttribute("cx", "60");
+      c.setAttribute("cy", "60");
+      c.setAttribute("r", String(R));
+      c.setAttribute("fill", "none");
+      c.setAttribute("stroke", seg.color);
+      c.setAttribute("stroke-width", String(W));
+      c.setAttribute("stroke-dasharray", "0 " + C);
+      c.setAttribute("stroke-dashoffset", String(-acc));
+      c.style.transition = "stroke-dasharray .9s cubic-bezier(.25,.8,.3,1) " + (i * 0.16) + "s";
+      g.appendChild(c);
+      var len = C * seg.value / total;
+      var target = len + " " + (C - len);
+      if (reduce) {
+        c.setAttribute("stroke-dasharray", target);
+      } else {
+        requestAnimationFrame(function(){
+          requestAnimationFrame(function(){ c.setAttribute("stroke-dasharray", target); });
+        });
+      }
+      acc += len;
+    });
+    svg.appendChild(g);
+    svg.dataset.built = "1";
+  }
+
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (!en.isIntersecting) return;
+      en.target.classList.add("in");
+      en.target.querySelectorAll("[data-count]").forEach(function(n){
+        if (!n.dataset.done) { n.dataset.done = "1"; animateCount(n); }
+      });
+      if (en.target.matches("[data-count]") && !en.target.dataset.done) {
+        en.target.dataset.done = "1";
+        animateCount(en.target);
+      }
+      en.target.querySelectorAll("svg.donut").forEach(buildDonut);
+      if (en.target.matches("svg.donut")) buildDonut(en.target);
+      io.unobserve(en.target);
+    });
+  }, {threshold: 0.18, rootMargin: "0px 0px -40px 0px"});
+
+  document.querySelectorAll(".reveal").forEach(function(el){ io.observe(el); });
+  document.querySelectorAll(".hero [data-count]").forEach(function(el){
+    el.dataset.done = "1";
+    animateCount(el);
+  });
+})();
+</script>
+</body>
+</html>

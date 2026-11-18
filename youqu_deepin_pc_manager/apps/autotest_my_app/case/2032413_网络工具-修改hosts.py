@@ -19,6 +19,13 @@ class TestMyCase(BaseCase):
     DAEMON_BACKUP_SAVED = "/tmp/hosts_daemon_bak_case209.keep"
 
     def _xdotool(self, widget, args: str):
+        # 输入法激活时 xdotool type 的字符会停留在候选区未上屏, 产品会按
+        # "缺少主机名"拒绝保存; 输入前明确切回英文输入法。
+        widget.run_cmd(
+            "export DISPLAY=:0; fcitx-remote -c 2>/dev/null || true",
+            timeout=5,
+            out_debug_flag=False,
+        )
         widget.run_cmd(
             f'export DISPLAY=:0; xdotool {args}', timeout=10, out_debug_flag=False
         )

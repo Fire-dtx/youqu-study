@@ -9,6 +9,7 @@ from os.path import expanduser
 from apps.autotest_my_app.case import BaseCase
 from apps.autotest_my_app.widget import MyAppWidget
 from src import logger
+from src import sleep
 
 
 class TestMyCase(BaseCase):
@@ -86,9 +87,15 @@ class TestMyCase(BaseCase):
             self.assert_true(widget.wait_pc_manager_exit(timeout=15))
             sudo(
                 "systemctl stop deepin-pc-manager-daemon 2>/dev/null; "
-                "pkill -f deepin-pc-manager-daemon; "
-                "pkill -f deepin-pc-manager-session-daemon; true"
+                "systemctl --user stop deepin-pc-manager-session-daemon 2>/dev/null; "
+                "pkill -9 -f deepin-pc-manager-daemon; "
+                "pkill -9 -f deepin-pc-manager-session-daemon; true"
             )
+            # 守护进程可能由 D-Bus/systemd 自动拉起, 给终止动作留出收敛时间
+            for _ in range(10):
+                if not daemon_procs():
+                    break
+                sleep(1)
             self.assert_false(bool(daemon_procs()))
 
             # 步骤: 覆盖安装。真实升级路径优先 apt(仓库有更高版本);

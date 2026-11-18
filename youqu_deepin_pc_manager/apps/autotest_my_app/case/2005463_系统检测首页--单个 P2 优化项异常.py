@@ -28,6 +28,14 @@ class DetectionWidget(MyAppWidget):
             out_debug_flag=False,
         ).strip()
 
+    def get_ssh_dir_mode(self) -> str:
+        """读取 ~/.ssh 的权限位(八进制三位, 如 700)"""
+        return self.run_cmd(
+            f"stat -c %a {self.SSH_DIR} 2>/dev/null",
+            timeout=5,
+            out_debug_flag=False,
+        ).strip()
+
     def has_ssh_private_key(self) -> bool:
         """~/.ssh 下是否存在产品识别的私钥文件"""
         output = self.run_cmd(
@@ -47,8 +55,19 @@ class DetectionWidget(MyAppWidget):
         产品仅在 ~/.ssh 存在私钥时才汇总权限结论(detectSSHKey: 无私钥直接判通过),
         测试机默认没有私钥, 因此缺少时先生成临时 ed25519 私钥, 再执行前置条件的
         chown; 目录属主与登录用户不一致即被判定为异常。
+
+        仅 chown 而不放开 700 目录权限时, 检测方以登录用户身份无法枚举私钥,
+        会走“无私钥直接通过”分支, 前置静默失效(实测 ok=True)。这里额外把目录
+        改成 755: 仍不超权限阈值(modeOk=true), 但属主错误可被检出且私钥可见。
         """
         self.created_ssh_key = False
+        self.ssh_dir_original_mode = self.get_ssh_dir_mode()
+        # 测试机可能不存在 ~/.ssh, ssh-keygen 不会自动创建父目录
+        self.run_cmd(
+            f"mkdir -p {self.SSH_DIR} && chmod 700 {self.SSH_DIR}",
+            timeout=10,
+            out_debug_flag=False,
+        )
         if not self.has_ssh_private_key():
             self.run_cmd(
                 f"ssh-keygen -t ed25519 -N '' -f {self.SSH_DIR}/id_ed25519 -q",
@@ -61,10 +80,19 @@ class DetectionWidget(MyAppWidget):
             timeout=10,
             out_debug_flag=False,
         )
-        return self.get_ssh_dir_owner() == "root"
+        self.sudo_run_cmd(
+            f"chmod 755 {self.SSH_DIR}",
+            timeout=10,
+            out_debug_flag=False,
+        )
+        return (
+            self.get_ssh_dir_owner() == "root"
+            and self.get_ssh_dir_mode() == "755"
+            and self.has_ssh_private_key()
+        )
 
     def cleanup_ssh_key_permission(self):
-        """恢复 ~/.ssh 属主, 并删除前置构造的临时私钥"""
+        """恢复 ~/.ssh 属主与原始权限位, 并删除前置构造的临时私钥"""
         user = self.run_cmd("id -un", timeout=5, out_debug_flag=False).strip()
         group = self.run_cmd("id -gn", timeout=5, out_debug_flag=False).strip()
         self.sudo_run_cmd(
@@ -72,6 +100,13 @@ class DetectionWidget(MyAppWidget):
             timeout=10,
             out_debug_flag=False,
         )
+        original_mode = getattr(self, "ssh_dir_original_mode", "")
+        if original_mode:
+            self.sudo_run_cmd(
+                f"chmod {original_mode} {self.SSH_DIR}",
+                timeout=10,
+                out_debug_flag=False,
+            )
         if getattr(self, "created_ssh_key", False):
             self.run_cmd(
                 f"rm -f {self.SSH_DIR}/id_ed25519 {self.SSH_DIR}/id_ed25519.pub",

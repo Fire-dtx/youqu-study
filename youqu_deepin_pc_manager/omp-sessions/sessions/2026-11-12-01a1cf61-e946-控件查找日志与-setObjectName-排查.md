@@ -1,11 +1,13 @@
 # 控件查找日志与 setObjectName 排查
 
 - 会话 ID: `01a1cf61-e946`
+- 类型: 顶层会话
 - 项目目录: `/home/ut000635@uos/Documents/TestCode/youqu_deepin_pc_manager`
-- 创建时间: 2026-11-12T10:51:02.854Z
-- 消息: user 12 / assistant 15
+- 创建时间: 2026-11-12T18:51:02+08:00
+- 最后活动: 2026-11-13T10:11:23+08:00
+- 消息: 用户提示词 12 / 助手文本 15 / 模型请求 209
 - 模型: deepseek-v4.1-flash-1017 × 209
-- Token: input=704915, output=148609, cacheRead=17119104, total=17972628
+- Token: input=704,915, output=148,609, cacheRead=17,119,104, total=17,972,628
 - 工具调用 Top: bash×161, edit×58, read×16, todo×14, wait×8, eval×2
 - 原始记录: `/home/ut000635@uos/.omp/agent/sessions/-Documents-TestCode-youqu_deepin_pc_manager/2026-11-12T10-51-02-854Z_01a1cf61-e946-7000-9e5b-e304f314dba7.jsonl`
 
@@ -66,7 +68,7 @@ find_element_by_attr的 probe=True是否所有用例都应该加上？
 
 结论：**存在，并且已经稳定复现，但当前没有一条用例因它失败。**
 
-## 1. 日志事实
+\## 1. 日志事实
 
 `report_2026_1106/report/logs` 中 `====未找到“$//…”元素！====` 来自 `src/custom_exception.py:53`，由 `src/dogtail_utils.py:188-221` 在 AT-SPI 表达式返回空列表时抛出并**无条件 `logger.error`**。
 
@@ -78,7 +80,7 @@ find_element_by_attr的 probe=True是否所有用例都应该加上？
 
 两天集合几乎一致（11-05 少 13 次），说明可稳定复现，并非偶发。11-05 该轮共 362 条用例、6 条失败（`1999177`/`2032619`/`2032623`/`2032625` 网络检测 issues=1、`2010553` dde-printer 安装、`2032433` 日志查看器未启动），**没有一条根因是控件名找不到**。
 
-## 2. 按性质拆解
+\## 2. 按性质拆解
 
 | 未命中名称 | 次数(11-04/11-05) | 实际命中名 | 性质 |
 |---|---|---|---|
@@ -93,32 +95,15 @@ find_element_by_attr的 probe=True是否所有用例都应该加上？
 | `$//设置` / `$//Settings` | 2/2 | 坐标点击菜单项 | 有回退 |
 | `$//帮助` | 1/1 | `dman` 命令兜底 | 有回退 |
 | `$//shellRepair_outputLog` / `shellRepair_inputEdit` | 5+1/5+1 | 无（对话框已关闭） | 清理阶段预期不存在 |
-| `$//spaceCleanCategory*_{linglong,snapshot}`、`$//categoryCard_*` | 20/20 | 无 | 该环境无玲珑/快照数据，用例允许缺失 |
-| `$//detection_page//空间清理`、`optimization_startScanBtn` | 1/1 | 无 | 负向断言（验证入口不显示），未找到即预期 |
-| `$//utility_categoryTabs//全部`、`//磁盘工具`、`$//utilityCategoryTabs//…` | 4/4 | 无，两候选全空 | 真实未命中，但用例仍 PASS |
+| `$//spaceCleanCategory*_{linglong,snapshot}`、`$//categoryCard
 
-典型证据：
-- 11/05 17:15:20 `开始修复` 未找到 → 17:15:21 `repair_startBtn` 命中（debug 行 15521-15525）；
-- 11/05 16:05:41 `detectionFullScanPage` → 同秒 `detection_fullScanPage` 命中（行 1114-1116）；
-- 11/05 17:13:41 `repairOfflineOnlySwitch` → `repair_offlineSwitch`（行 15184-15186）；
-- 11/05 16:32:04 → 16:32:05 `startup_电脑管家` 失败后 `startup_PC Manager` 命中（行 7401-7405）；
-- 11/05 18:20:37 与 18:20:46 `utility_categoryTabs//磁盘工具`、`//全部` 四个候选全空，**用例 2032417 仍 PASS**（`click_utility_category_tab_by_name` 找不到时静默 `return None`，`my_app_widget.py:16039-16052`）；
-- 11/05 17:59:27-48 `spaceCleanCategory*_linglong/snapshot` 两候选全空，用例 2032301 PASS（分类数据不存在，用例容错）。
-
-## 3. 判断
-
-- **“用例写错/猜错产品控件名”确实存在**：`开始修复`、`detectionFullScanPage`、`repairOfflineOnlySwitch`、`startup_电脑管家` 这几类主名称在 V20 产品树中根本不存在，靠代码里的第二/第三候选名或别名表兜住（`my_app_widget.py:2592-2599`、`2812-2825`、`3433-3466`、`21514-21570`），今天能过，但每次都会先打一条 ERROR。
-- **日志不可判读是真问题**：`ElementNotFound.__init__` 在回退探测、等待、清理阶段也打 ERROR，231 条“未找到”里绝大多数是正常试探，真实异常会被淹没。
-- **唯一实质漏洞已被当前代码绕开**：旧版用例点击实用工具分类 tab 全失败仍判 PASS；当前仓库 `click_utility_category_tab_by_name` 只有定义没有调用（`2032417` 已改为直接点卡片 + 校验对话框按钮），所以现在不存在“点击静默失败仍通过”的活动路径。
-- **`$//utility_categoryTabs//*`、`$//spaceCleanCategory*` 在报告期内从未命中**：前者是死路径可清理，后者需 V25 环境确认名称（`V20` 无玲珑/快照分类，属场景性缺失）。
-
-按当前代码不改的前提下，结论是：**名称失配问题存在且集中在 V20/V25 命名差异，已被兼容层覆盖；6 条失败与控件名无关。** 若要降噪，方向是回退探测改用 `find_elements_by_attr`（不抛异常）或把 `ElementNotFound` 的日志级别降到 debug，但这属于代码改动，待你确认后再执行。
+…（截断，原文 3139 字符）
 
 ### A2
 
 未改动任何代码。以下统计来自 11-04/11-05 两轮日志，方案部分只给设计。
 
-## 一、统计：53 条用例（当前仓库存活 51）
+\## 一、统计：53 条用例（当前仓库存活 51）
 
 口径：日志中只要出现一次 `====未找到“$//…”元素！====` 即计入；仅能按未命中反推（当前无命中日志）。
 
@@ -155,141 +140,15 @@ find_element_by_attr的 probe=True是否所有用例都应该加上？
 
 `237` 同时命中 `detectionFullScanPage` 与 `detectionScoreTimeText`，按名称相加会重复。
 
-注意：这是**日志口径**。11-05 之后 `2032417` 已改为直接点卡片、`2010049` 已改走 `_find_showing_menu_item` 遍历、`2032299` 不再调用 `spaceCleanCategory*`，所以当前代码实际仍会打印未命中的用例数应小于 51，需落地日志后重跑确认。
+注意：这是**日志口径**。11-05 之后 `2032417` 已改为直接点卡片、`2010049` 已改走 `_find_showing_menu_item` 遍历、`2032299` 不再调用 `spaceCleanCategory*`，所以当前代码实
 
-## 二、日志改造方案
-
-### 2.1 设计原则
-
-1. **一个出口**：只在 `src/dogtail_utils.py:191 find_elements_by_attr`（唯一树遍历入口）埋点，`find_element_by_attr:208` 复用不再重复打。173 处 `find_element_by_attr` + 147 处 `find_elements_by_attr` 调用点、63 个用例文件都自动覆盖。
-2. **命中/未命中同格式**：一行键值对，含 `expr/命中/数量/元素 name/role/耗时/调用点`。
-3. **区分探测与必需**：回退候选传 `probe=True`，降为 DEBUG；必需查找未命中升 WARNING。日志才可判读。
-4. **去重限流**：同一 `(expr, 命中)` 默认只打首次，避免轮询刷屏；开关可全打。
-5. **会话汇总**：`conftest.py:776 pytest_sessionfinish` 输出按表达式的命中/未命中统计，直接产出“多少用例、多少名称”的数据。
-
-### 2.2 改动点
-
-| 文件 | 位置 | 改动 |
-|---|---|---|
-| `src/custom_exception.py` | 45-55 | 删除 `logger.error(err)`，只保留异常消息；否则底层已打、异常再打、且标签是 `[__init__]` 无法定位调用点 |
-| `src/dogtail_utils.py` | 191-221 | `find_elements_by_attr` 计时并输出结构化日志；新增 `probe=False` 参数；`find_element_by_attr` 透传 `probe`，抛异常前不重复打 |
-| `apps/autotest_my_app/widget/my_app_widget.py` | 2812-2825、16039-16052 | 回退候选传 `probe=True`；`click_utility_category_tab_by_name` 全失败时 WARNING 并返回 `False`（现返回 `None` 且静默） |
-| `conftest.py` | 776 | `pytest_sessionfinish` 追加查找统计表 |
-
-### 2.3 代码骨架
-
-`src/dogtail_utils.py`：
-
-```python
-import os
-import sys
-import time
-from collections import defaultdict
-
-_LOOKUP_STATS = defaultdict(lambda: {"hit": 0, "miss": 0})
-_LOOKUP_FIRST = set()
-_LOOKUP_VERBOSE = os.environ.get("UI_LOOKUP_VERBOSE") == "1"
-
-def _lookup_log(expr, elements, cost, probe, depth=1):
-    frame = sys._getframe(depth + 1)
-    caller = f"{os.path.basename(frame.f_code.co_filename)}:{frame.f_lineno}:" \
-             f"{frame.f_code.co_name}"
-    hit = bool(elements)
-    _LOOKUP_STATS[expr]["hit" if hit else "miss"] += 1
-    key = (expr, hit)
-    if probe or (hit and not _LOOKUP_VERBOSE):
-        return
-    if key in _LOOKUP_FIRST:
-        return
-    _LOOKUP_FIRST.add(key)
-    if hit:
-        el = elements[0]
-        logger.info(
-            f"[控件查找] hit=1 expr={expr} count={len(elements)} "
-            f"name={el.name!r} role={el.roleName!r} "
-            f"size={el.size} cost={cost:.2f}s caller={caller}"
-        )
-    else:
-        logger.warning(
-            f"[控件查找] hit=0 expr={expr} count=0 cost={cost:.2f}s caller={caller}"
-        )
-
-def find_elements_by_attr(self, expr, probe=False):
-    start = time.perf_counter()
-    ...
-    result = self.__trace(self.obj, [], expr[1:])
-    cost = time.perf_counter() - start
-    _lookup_log(expr, result, cost, probe, depth=1)
-    return result
-
-def find_element_by_attr(self, expr, index=0, probe=False):
-    elements = self.find_elements_by_attr(expr)
-    if not elements:
-        raise ElementNotFound(expr)          # 不再打日志
-    ...
-```
-
-`my_app_widget.py` 回退层：
-
-```python
-def _find_element_in_exprs(self, exprs):
-    for expr in exprs:
-        try:
-            els = self.dog.find_elements_by_attr(expr, probe=True)
-            if els:
-                return els[0]               # 命中由底层按需打
-        except BaseException:
-            continue
-    return None
-
-def click_utility_category_tab_by_name(self, tab_name):
-    element = self._find_element_in_exprs([...])
-    if not element:
-        logger.warning(f"[控件查找] 分类标签未命中 tab={tab_name!r}，点击跳过")
-        return False
-    ...
-```
-
-`conftest.py`：
-
-```python
-def pytest_sessionfinish(session):
-    ...
-    from src.dogtail_utils import _LOOKUP_STATS
-    logger.info("[控件查找汇总] expr\thit\tmiss")
-    for expr, s in sorted(_LOOKUP_STATS.items(), key=lambda i: -(i[1]["miss"])):
-        logger.info(f"[控件查找汇总] {expr}\t{s['hit']}\t{s['miss']}")
-```
-
-### 2.4 预期日志
-
-```
-[控件查找] hit=0 expr=$//repair_runtimePage//开始修复 count=0 cost=0.41s caller=my_app_widget.py:3462:click_repair_start_button
-[控件查找] hit=1 expr=$//repair_startBtn count=1 name='开始修复' role='push button' size=(88, 32) cost=0.38s caller=my_app_widget.py:3462:click_repair_start_button
-```
-
-### 2.5 取舍与风险
-
-- **日志量**：命中次数远大于未命中（362 条用例 × 每条数十次查找）。所以命中默认仅首次 INFO，`UI_LOOKUP_VERBOSE=1` 才全打；未命中首次 WARNING，重复降 DEBUG。
-- **性能**：`perf_counter` 与 dict 计数纳秒级；`sys._getframe` 只在真正打印时调用。
-- **`ElementNotFound` 日志移除**：已 grep，`assert_common.py:207` 只消费异常对象，不依赖 ERROR 日志文本；无其他检索依赖。
-- **name 是 AT-SPI accessibleName，不是 QML setObjectName**：命中日志打印 `name/role/size` 可判断是否命中了同名不同控件；要核对 setObjectName 本身需产品侧 dump，测试侧拿不到。
-- **统计口径**：改造后重跑一轮，`pytest_sessionfinish` 的汇总表可直接给出“未命中名称 → 用例数”，比现在从日志反推精确。
-
-### 2.6 验证步骤
-
-1. `python3 manage.py run -k 2005705`：确认出现 MISS→HIT 两条带 `caller` 的日志。
-2. `python3 manage.py run -k 2032417`：确认分类 tab 未命中时打 WARNING 且返回 `False`。
-3. 跑完一轮后检查 `pytest_sessionfinish` 汇总表，未命中次数应与改造前一致（仅级别/格式变化）。
-4. 对比改造前后 `grep -c "hit=0"`，确认无新增真实未命中。
-
-需要我按这个方案落地时再说，当前未改任何文件。
+…（截断，原文 5999 字符）
 
 ### A3
 
 落地完成，测试机实测验证通过。
 
-## 一、改动内容（8 个文件）
+\## 一、改动内容（8 个文件）
 
 | 文件 | 改动 |
 |---|---|
@@ -307,32 +166,23 @@ def pytest_sessionfinish(session):
 [控件查找汇总] 表达式=114 直接未命中表达式=14 直接未命中用例=32 回退探测未命中次数=10
 ```
 
-## 二、验证结果
+\## 二、验证结果
 
 | 验证项 | 结果 |
 |---|---|
 | 单用例 `2005705` | 首跑 PASSED；命中日志 4 条、`2026-11-12_error.log` 为空（重复 ERROR 已消失） |
-| 批量：直接调用查找 API 的 63 条用例（59 分钟） | 41 通过 / 22 失败；汇总输出 114 表达式、14 个直接未命中 |
-| 14 个直接未命中逐条核对 | 全部是 V20/V25 双写或平台回退的候选查找未标记 probe（含 `$//设置`/`$//Settings`：DTK 标题栏菜单项不暴露 AT-SPI，代码本就有键盘导航回退），**无一例是用例写错 setObjectName 名称** |
-| 修正 14 个调用点后复跑 7 条代表性用例 | 59 表达式，**直接未命中 0**、probe 未命中 47（不计入问题统计）；6 通过 / 1 失败（`2032379` 判据冲突，与清单一致） |
-| 本机/测试机文件一致性 | 8 个文件 md5 全部一致 |
+| 批量：直接调用查找 API 的 63 条用例（59 分钟） | 41 通过 / 22 失败；汇总输出
 
-## 三、遗留问题（均与本次日志改动无关，需你决定是否处理）
-
-1. `2032439`、`2032441` 复跑报 `TypeError: assert_true() takes 1 positional argument but 2 were given` —— 用例自身调用方式问题（`src/assert_common.py:355` 定义为单参数）。
-2. `2005705` 21:24 再跑失败：修复输出出现 `[sudo] password for uostest: ********` + `密码验证失败`，属 sudo 垫片/密码时序漂移；19:51 首跑 PASSED。
-3. 20 条 `2032359~2032403` 分区用例统一失败在 `reconnect_dogtail()` 断言：用例用 `deepin-pc-manager-launch` 包装脚本启动（历史已记录该脚本经 `deepin-security-loader` 阻断 AT-SPI 注册），属环境/用例启动方式，与本改动无关。
-
-未执行任何 git 提交或推送；改动仅在工作区与测试机副本。
+…（截断，原文 2296 字符）
 
 ### A4
 
 三层体现，均已实测。
 
-## 1. 日志行：`probe=` 字段
+\## 1. 日志行：`probe=` 字段
 
 ```python
-# src/dogtail_utils.py:76
+\# src/dogtail_utils.py:76
 def _lookup_log(expr, elements, cost, probe, caller):
     key = ("probe_" if probe else "") + ("hit" if hit else "miss")
     stat[key] += 1
@@ -358,7 +208,7 @@ def _lookup_log(expr, elements, cost, probe, caller):
 
 所以单行判定规则：`hit=0` + `probe=0` = 真实未命中；`probe=1` = 候选回退（预期）。
 
-## 2. 汇总：两套计数不混
+\## 2. 汇总：两套计数不混
 
 ```
 [控件查找汇总] 表达式=4 直接未命中表达式=1 直接未命中用例=1 回退探测未命中次数=1
@@ -370,27 +220,16 @@ def _lookup_log(expr, elements, cost, probe, caller):
 - `回退探测未命中次数`：`probe=1` 的未命中，仅计数，不列表达式、不算用例。
 - 表达式行给出 `hit/miss/probe_hit/probe_miss` 四列，同一表达式两种用途可分开看。
 
-## 3. 调用侧：由调用方声明语义
+\## 3. 调用侧：由调用方声明语义
 
 是否候选回退由调用点传 `probe=True` 决定（日志层无法自动推断）：
 
 | 位置 | 判定 |
 |---|---|
 | `_find_element_in_exprs`、`_find_repair_element`、`_any_visible`、`_elements_exist`、`_find_first_element` | 多候选回退 → `probe=True` |
-| `get_detection_full_scan_button_showing` / `get_detection_cards_view_showing` / `__cardsView` 系列 / `open_settings_dialog` 的 `设置|Settings` / `get_repair_completion_status` 的 `$//修复完成` | V20/V25 双写 → `probe=True` |
-| 用例 `2001991`(`dupFile_actionCombo`)、`2005491`(`_find`)、`2005857`(卡片/runtime 页候选)、`2032379`(`extendedScanPartitionRow`) | 候选链 → `probe=True` |
-| 单表达式"必须存在"的查找 | 不传 → 未命中即问题 |
+| `get_detection_full_scan_button_showing` / `get_
 
-快速核对命令：
-
-```bash
-grep '\[控件查找\] hit=0 probe=0' 2026-11-13_debug.log   # 真实未命中
-grep '\[控件查找\] hit=0 probe=1' 2026-11-13_debug.log   # 需 UI_LOOKUP_VERBOSE=1
-```
-
-取舍：`probe` 漏传会让候选未命中误报为问题（本轮 14 处就是这样发现并补齐的）；反过来，把断言性查找误标 probe 会掩盖真实问题。因此判定权放在调用点，汇总只做如实分列。
-
-`src/dogtail_utils.py` 已同步测试机，改动仅日志格式与统计口径，不改变任何查找返回值。
+…（截断，原文 2150 字符）
 
 ### A5
 
@@ -441,7 +280,7 @@ grep '\[控件查找\] hit=0 probe=1' 2026-11-13_debug.log   # 需 UI_LOOKUP_VER
 
 没有隐式探测机制。回退由**调用方显式给候选列表**，`probe=True` 只是告诉日志“这是候选尝试”，不参与查找逻辑。
 
-## 1. 实现手段
+\## 1. 实现手段
 
 **统一入口**（`my_app_widget.py:1811`）：
 
@@ -468,39 +307,14 @@ def _find_element_in_exprs(self, exprs):
 
 **用例内候选**同理：`2001991` 先 `dupFile_actionCombo`、再按 role 找 `combo box` 兜底；`2005857` 多表达式；`2032379` 先 `settings_extendedScanPartition` 再 `extendedScanPartitionRow`；`2005491` 的 `_find`。
 
-## 2. 底层执行
+\## 2. 底层执行
 
 `find_elements_by_attr(expr, probe=False, _caller=None)`（`src/dogtail_utils.py:305`）→ `__trace` 逐级解析 `$//`：`SearchError` 转 `ElementNotFound`。`probe` 只传给 `_lookup_log`：
 
 ```python
 caller = _caller or _lookup_caller(skip=1)
-start = time.perf_counter()
-...
-result = self.__trace(self.obj, [], expr[1:])
-_lookup_log(raw_expr, result, ..., probe, caller)
-```
 
-即**返回值、异常、重试次数完全不受 probe 影响**。
-
-注意区分两层重试：
-
-- 候选回退：不同表达式之间，一次性顺序尝试；
-- 等待渲染：同一候选外层 `for _ in range(timeout): sleep(1)`，属时序等待，不是候选语义。
-
-## 3. 正确的两种写法
-
-```python
-# 候选回退：显式列表 + probe
-element = self._find_element_in_exprs([
-    "$//detection_fullScanPage",   # V25
-    "$//detectionFullScanPage",    # V20
-])
-
-# 断言性查找：不加 probe，未命中就是真实问题
-node = self.dog.find_element_by_attr("$//settings_dialog")
-```
-
-判定边界：**列表里的每个候选都是“可能不存在”的备选**才标 probe；**用例要求必须存在**的控件直接查找，标了 probe 会掩盖真实未命中。
+…（截断，原文 2107 字符）
 
 ### A8
 
@@ -748,7 +562,7 @@ finally:
 
 不应该。`probe=True` 只表示“这次未命中是预期内的”，不是“所有查找都该探测”。
 
-## 判定标准
+\## 判定标准
 
 看调用方对“找不到”的处理方式：
 
@@ -765,13 +579,13 @@ finally:
 3. 调用结果直接参与断言，或直接 click/输入 → 真查找，不加。
 4. 同一控件的候选列表中的每一项 → 探测，加 probe。
 
-## 全加的后果
+\## 全加的后果
 
 - 日志：真实未命中不再出 WARNING，全部降为静默候选统计 → 缺陷被掩盖。
 - 汇总：`直接未命中用例` 恒为 0，失去“哪些用例的控件名/树结构有问题”的检测能力。
 - probe 的降噪价值消失，反过来变成“全局静音”。
 
-## 当前项目分布
+\## 当前项目分布
 
 ```
 查找调用总数(含定义/文档)：318
@@ -781,9 +595,17 @@ finally:
 
 绝大多数是关键路径查找，不需要 probe；这也符合“probe 只用于候选与探测”的约定。
 
-## 误判的代价不同
+\## 误判的代价不同
 
 - 漏加 probe：候选回退产生 WARNING 噪声，但真实问题不会被掩盖（本轮最初 14 处就是这样被发现的）。
 - 多加 probe：真实缺陷静默，最危险。
 
 所以默认**不加**，只有确认“未命中属预期”才加；漏标的噪声可以从 `结果=真实未命中` 的汇总里倒查修正。
+
+## omp 空闲摘要（recap，最新在前）
+
+- 目标：让控件查找日志直观区分真实未命中与候选回退，并在未命中时打印匿名控件文本。改动已验证，用例通过。下一步：等你确认是否提交这两个文件的改动。
+
+- 已完成控件查找日志改造：实现统一日志记录，区分候选回退与真实未命中，并在测试机跑 63 条用例验证，未发现用例写错 setObjectName 名称。下一步等你决定是否提交这些改动。
+
+- 排查控件 setObjectName 查找失败：已统计 53 条用例（当前仓库存活 51），并给出命中/未命中统一打印的改造方案，代码未改。等你确认后按方案落地。
